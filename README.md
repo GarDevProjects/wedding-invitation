@@ -133,9 +133,20 @@ Prueba al menos:
 - Textos largos, tildes y nombres de invitados.
 - Navegación con teclado y la opción del sistema “reducir movimiento”.
 
-## Publicar gratis en GitHub Pages
+## Publicar automáticamente en GitHub Pages
 
-1. Confirma que los archivos estén en la rama `main` y súbelos:
+El repositorio incluye `.github/workflows/deploy-pages.yml`. Cada `push` a `main` empaqueta el sitio y publica la versión nueva automáticamente. También puedes iniciarlo manualmente desde la pestaña **Actions** con **Run workflow**.
+
+### Configuración única en GitHub
+
+1. En GitHub abre el repositorio **wedding-invitation**.
+2. Entra en **Settings → Pages**.
+3. En **Build and deployment → Source**, selecciona **GitHub Actions**.
+4. Si GitHub muestra una configuración anterior llamada **Deploy from a branch**, sustitúyela por **GitHub Actions**. Solo necesitas hacer esto una vez.
+
+### Publicar una versión
+
+Confirma los cambios y súbelos a `main`:
 
 ```powershell
 git add .
@@ -143,17 +154,17 @@ git commit -m "Build wedding invitation"
 git push origin main
 ```
 
-2. En GitHub abre el repositorio **wedding-invitation**.
-3. Entra en **Settings → Pages**.
-4. En **Build and deployment**, elige **Deploy from a branch**.
-5. Selecciona `main`, carpeta `/(root)`, y pulsa **Save**.
-6. Espera a que finalice el despliegue. La dirección normalmente será:
+Después del `push`:
+
+1. Abre **Actions → Deploy wedding invitation to GitHub Pages**.
+2. Espera a que el job **Deploy to GitHub Pages** aparezca en verde.
+3. Abre la URL indicada en el resumen del despliegue. Normalmente será:
 
 ```text
 https://gardevprojects.github.io/wedding-invitation/
 ```
 
-GitHub confirma que un sitio estático puede publicarse directamente desde una rama y desde la carpeta raíz ([documentación oficial de GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)).
+El workflow utiliza los permisos mínimos requeridos (`contents: read`, `pages: write` e `id-token: write`), el entorno oficial `github-pages` y evita que dos despliegues se ejecuten simultáneamente. Su estructura sigue la [documentación oficial para despliegues automáticos](https://docs.github.com/en/get-started/start-your-journey/deploying-your-website-automatically) y la [guía de workflows personalizados de Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
 
 Para un dominio propio, configúralo primero en **Settings → Pages → Custom domain** y después crea los registros DNS indicados por GitHub. Consulta la [guía oficial de dominios personalizados](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
 
@@ -176,6 +187,7 @@ La dirección visual se inspira en invitaciones impresas de lujo: tipografía ed
 
 ```text
 wedding-invitation/
+├── .github/workflows/deploy-pages.yml
 ├── index.html
 ├── .nojekyll
 ├── assets/

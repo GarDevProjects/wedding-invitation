@@ -8,8 +8,8 @@ Una invitación digital editorial, elegante y completamente responsive. Está he
 - Fecha y hora calculadas desde una sola configuración, con cuenta regresiva en tiempo real.
 - Secciones 60/40 y 40/60 para fecha, dress code, ubicación, regalos y RSVP.
 - Enlace directo a Waze y archivo de calendario `.ics` descargable.
-- Formulario de confirmación con asistencia, número de invitados, restricciones alimentarias y mensaje.
-- Carrusel infinito de fotos verticales, pausa al interactuar y galería ampliada.
+- Formulario individual de confirmación mediante el nombre del invitado.
+- Carrusel infinito de fotos verticales uniformes y galería ampliada.
 - Animaciones de entrada, parallax suave, textura editorial y alternativa sin movimiento.
 - Diseño adaptado a móvil, navegación por teclado, mensajes accesibles y modo de impresión.
 - Fotografías provisionales de Unsplash que puedes sustituir por las propias.
@@ -37,9 +37,8 @@ La zona horaria ya está configurada como `America/Costa_Rica`. El formato de fe
 - Nombre del lugar, dirección exacta y enlace de Waze.
 - Hora recomendada de llegada, estacionamiento y/o transporte.
 - Código de vestimenta definitivo y colores reservados.
-- Fecha límite de confirmación y máximo de acompañantes por invitación.
+- Fecha límite de confirmación.
 - Política sobre niños, si aplica.
-- Datos de alergias, menú o restricciones alimentarias que desean recopilar.
 - Información de regalos, SINPE o transferencia.
 - Fotografías finales y canción con licencia de uso.
 - Correo que recibirá los RSVP y un número de contacto para dudas.

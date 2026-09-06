@@ -337,17 +337,6 @@
     const status = $(".form-status", form);
     const submit = $(".submit-button", form);
     const nameInput = $("#full-name", form);
-    const guestSelect = $("#guests", form);
-    const dietary = $("#dietary", form);
-
-    $$("input[name='asistencia']", form).forEach((radio) => {
-      radio.addEventListener("change", () => {
-        const attending = radio.value.startsWith("Sí") && radio.checked;
-        if (!radio.checked) return;
-        guestSelect.disabled = !attending;
-        dietary.disabled = !attending;
-      });
-    });
 
     nameInput.addEventListener("input", () => nameInput.closest(".field").classList.remove("is-invalid"));
 
@@ -486,7 +475,6 @@
       dragging = true;
       startX = event.clientX;
       startScroll = viewport.scrollLeft;
-      track.style.animationPlayState = "paused";
       viewport.setPointerCapture(event.pointerId);
     });
     viewport.addEventListener("pointermove", (event) => {
@@ -494,7 +482,6 @@
     });
     const stopDragging = () => {
       dragging = false;
-      track.style.animationPlayState = "";
     };
     viewport.addEventListener("pointerup", stopDragging);
     viewport.addEventListener("pointercancel", stopDragging);

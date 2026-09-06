@@ -4,8 +4,8 @@
  * Local photos can be written as "assets/images/my-photo.jpg".
  */
 window.WEDDING_CONFIG = {
-  partnerOne: "Mariamalia",
-  partnerTwo: "Akion",
+  partnerOne: "Akion",
+  partnerTwo: "Mariamalia",
 
   // Replace this placeholder date with the real ceremony date and time.
   weddingDate: "2027-12-12T16:00:00-06:00",

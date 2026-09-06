@@ -36,8 +36,8 @@ window.WEDDING_CONFIG = {
 
   // Add a licensed MP3 to assets/audio/ and use its path here.
   music: {
-    src: "",
-    volume: 0.35,
+    src: "assets/audio/song.mp3",
+    volume: 0.50,
     ambientFallback: true,
   },
 

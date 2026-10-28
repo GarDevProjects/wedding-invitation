@@ -1,0 +1,10 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "allowImportingTsExtensions": true
+  },
+  "include": [".astro/types.d.ts", "src/**/*", "tests/**/*", "*.ts", "supabase/functions/_shared/contracts.ts"],
+  "exclude": ["dist", "node_modules", ".tools", "supabase/functions/wedding-api"]
+}

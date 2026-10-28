@@ -1,0 +1,47 @@
+{
+  "name": "wedding-invitation",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/secure-build.mjs",
+    "preview": "node scripts/preview.mjs",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:db": "supabase test db",
+    "check:edge": "deno check --config supabase/functions/wedding-api/deno.json supabase/functions/wedding-api/index.ts",
+    "test:db:embedded": "node scripts/test-db.mjs",
+    "test:edge": "deno test --allow-env --config supabase/functions/wedding-api/deno.json supabase/functions/tests/"
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.1.2",
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/italiana": "^5.3.0",
+    "@fontsource/parisienne": "^5.3.0",
+    "@supabase/supabase-js": "^2.118.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@electric-sql/pglite": "^0.5.13",
+    "@electric-sql/pglite-pgtap": "^0.0.14",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "deno": "^2.9.6",
+    "supabase": "^2.122.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

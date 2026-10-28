@@ -1,53 +1,18 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f2eee7" />
-    <meta
-      name="description"
-      content="La invitación de boda de Mariamalia y Akion. Fecha, ubicación, código de vestimenta y confirmación de asistencia."
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Mariamalia & Akion — Nuestra boda" />
-    <meta
-      property="og:description"
-      content="Nos encantaría celebrar este día contigo. Descubre todos los detalles y confirma tu asistencia."
-    />
-    <meta
-      property="og:image"
-      content="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=85"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://images.unsplash.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Italiana&family=Parisienne&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css" />
-    <title>Mariamalia & Akion — Nuestra boda</title>
-  </head>
-
-  <body>
+---
+import Layout from "../layouts/Layout.astro";
+import Photo from "./Photo.astro";
+import RsvpForm from "./RsvpForm";
+import { wedding } from "../config/wedding";
+import { display } from "../lib/dates";
+---
+<Layout>
+<dialog class="opening" aria-labelledby="opening-title"><div class="opening__inner"><p class="eyebrow">Una invitación para ti</p><p class="opening__monogram">A<span>&</span>M</p><h2 id="opening-title">Nuestro para siempre</h2><p>{display.partnerOne} & {display.partnerTwo}</p><p data-personalized-welcome hidden></p><p>{display.shortDate}</p><button class="button button--dark" type="button" data-open-invitation>Abrir invitación</button><p class="fine-print">La música es opcional. Actívala cuando quieras.</p></div></dialog>
     <a class="skip-link" href="#main-content">Saltar al contenido</a>
-
-    <div class="page-loader" aria-hidden="true">
-      <div class="page-loader__monogram">M<span>&</span>A</div>
-      <div class="page-loader__line"><span></span></div>
-    </div>
 
     <div class="site-grain" aria-hidden="true"></div>
 
     <header class="hero" id="inicio">
-      <img
-        class="hero__image"
-        data-image="hero"
-        src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=85"
-        alt="Pareja celebrando su boda al aire libre"
-        fetchpriority="high"
-      />
+      <Photo src={wedding.images.hero} alt="Pareja celebrando su boda al aire libre" class="hero__image" hero />
       <div class="hero__veil" aria-hidden="true"></div>
 
       <nav class="topbar" aria-label="Navegación principal">
@@ -67,11 +32,12 @@
       <div class="hero__content">
         <p class="eyebrow hero__eyebrow">Tenemos algo que celebrar</p>
         <h1 class="hero__names">
-          <span data-text="partnerOne">Mariamalia</span>
+          <span data-text="partnerOne">{display.partnerOne}</span>
           <em>&</em>
-          <span data-text="partnerTwo">Akion</span>
+          <span data-text="partnerTwo">{display.partnerTwo}</span>
         </h1>
-        <p class="hero__date" data-text="shortDate">12 · 12 · 2027</p>
+        <p class="hero__date" data-text="shortDate">{display.shortDate}</p>
+        <p class="hero__guest" data-personalized-welcome hidden></p>
       </div>
 
       <button class="music-button" type="button" aria-pressed="false" aria-label="Reproducir música">
@@ -96,15 +62,13 @@
             <p class="chapter-number">01 / 05</p>
             <p class="eyebrow">Reserva la fecha</p>
             <h2 class="display-title date-display">
-              <span data-text="dayName">Sábado</span>
-              <strong data-text="dayNumber">12</strong>
-              <span><span data-text="monthName">Diciembre</span> · <span data-text="year">2027</span></span>
+              <span data-text="dayName">{display.dayName}</span>
+              <strong data-text="dayNumber">{display.dayNumber}</strong>
+              <span><span data-text="monthName">{display.monthName}</span> · <span data-text="year">{display.year}</span></span>
             </h2>
-            <p class="lead" data-text="invitationMessage">
-              Después de tantas aventuras, elegimos la más bonita de todas: compartir la vida.
-            </p>
+            <p class="lead" data-text="invitationMessage">{display.invitationMessage}</p>
 
-            <div class="countdown" aria-label="Cuenta regresiva para la boda" aria-live="polite">
+            <div class="countdown" aria-label="Cuenta regresiva para la boda">
               <div><strong data-count="days">000</strong><span>Días</span></div>
               <div><strong data-count="hours">00</strong><span>Horas</span></div>
               <div><strong data-count="minutes">00</strong><span>Min</span></div>
@@ -116,12 +80,7 @@
             </button>
           </div>
           <figure class="split__media portrait-frame reveal reveal--right">
-            <img
-              data-image="date"
-              src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1000&q=85"
-              alt="Pareja de recién casados caminando"
-              loading="lazy"
-            />
+            <Photo src={wedding.images.date} alt="Pareja de recién casados caminando" />
             <figcaption>Nuestro para siempre comienza aquí</figcaption>
           </figure>
         </div>
@@ -131,31 +90,22 @@
         <div class="botanical botanical--one" aria-hidden="true"></div>
         <div class="chapter__content split split--40-60">
           <figure class="split__media portrait-frame portrait-frame--tall reveal">
-            <img
-              data-image="dressCode"
-              src="https://images.unsplash.com/photo-1544078751-58fee2d8a03b?auto=format&fit=crop&w=1000&q=85"
-              alt="Detalle elegante de una celebración de boda"
-              loading="lazy"
-            />
+            <Photo src={wedding.images.dressCode} alt="Detalle elegante de una celebración de boda" />
             <figcaption>Una noche para recordar</figcaption>
           </figure>
           <div class="split__copy reveal reveal--right">
             <p class="chapter-number">02 / 05</p>
             <p class="eyebrow">Dress code</p>
-            <h2 class="display-title" data-text="dressCodeTitle">Formal tropical</h2>
+            <h2 class="display-title" data-text="dressCodeTitle">{display.dressCodeTitle}</h2>
             <p class="script-accent">Vístete para celebrar</p>
-            <p class="lead" data-text="dressCodeDescription">
-              Elegante, fresco y listo para bailar. Trajes livianos y vestidos largos o midi.
-            </p>
+            <p class="lead" data-text="dressCodeDescription">{display.dressCodeDescription}</p>
             <div class="palette" aria-label="Paleta de colores sugerida">
               <span style="--swatch: #693f3b"><i>Borgoña</i></span>
               <span style="--swatch: #9a7867"><i>Rosa viejo</i></span>
               <span style="--swatch: #baa98e"><i>Champaña</i></span>
               <span style="--swatch: #63705b"><i>Olivo</i></span>
             </div>
-            <p class="fine-print" data-text="dressCodeNote">
-              Reservemos el blanco y los tonos marfil para la novia.
-            </p>
+            <p class="fine-print" data-text="dressCodeNote">{display.dressCodeNote}</p>
           </div>
         </div>
       </section>
@@ -165,42 +115,48 @@
           <div class="split__copy reveal">
             <p class="chapter-number">03 / 05</p>
             <p class="eyebrow">Dónde & cuándo</p>
-            <h2 class="display-title" data-text="venueName">Lugar de la celebración</h2>
-            <p class="script-accent" data-text="city">San José, Costa Rica</p>
+            <h2 class="display-title" data-text="venueName">{display.venueName}</h2>
+            <p class="script-accent" data-text="city">{display.city}</p>
 
             <div class="event-facts">
               <div>
                 <span>Fecha</span>
-                <strong data-text="fullDate">Sábado, 12 de diciembre de 2027</strong>
+                <strong data-text="fullDate">{display.fullDate}</strong>
               </div>
               <div>
                 <span>Hora</span>
-                <strong data-text="time">4:00 p. m.</strong>
+                <strong data-text="time">{display.time}</strong>
               </div>
               <div>
                 <span>Dirección</span>
-                <strong data-text="venueAddress">Agrega aquí la dirección exacta</strong>
+                <strong data-text="venueAddress">{display.venueAddress}</strong>
               </div>
             </div>
 
+            <ol class="event-timeline" aria-label="Programa de la boda">
+              {wedding.timeline.map(item => <li><time>{item.time}</time><div><strong>{item.title}</strong><p>{item.detail}</p></div></li>)}
+            </ol>
             <div class="button-row">
-              <a class="button button--dark" data-link="waze" href="#" target="_blank" rel="noopener">
+              <a class="button button--dark" data-link="googleMaps" href={wedding.googleMapsUrl} target="_blank" rel="noopener">
+                Abrir en Google Maps <span aria-hidden="true">↗</span>
+              </a>
+              <a class="button button--dark" data-link="waze" href={wedding.wazeUrl} target="_blank" rel="noopener">
                 Abrir en Waze <span aria-hidden="true">↗</span>
               </a>
               <button class="button button--ghost calendar-button" type="button">Agregar al calendario</button>
             </div>
-            <p class="fine-print" data-text="transportNote">
-              Recomendamos llegar 30 minutos antes. Habrá estacionamiento disponible.
-            </p>
+            <p class="fine-print" data-text="transportNote">{display.transportNote}</p>
           </div>
-          <figure class="split__media portrait-frame reveal reveal--right">
-            <img
-              data-image="venue"
-              src="https://images.unsplash.com/photo-1507501336603-6e31db2be093?auto=format&fit=crop&w=1000&q=85"
-              alt="Recepción de boda decorada con luces cálidas"
+          <figure class="split__media portrait-frame venue-map reveal reveal--right">
+            <iframe
+              data-map="venue"
+              title="Mapa de Sala de Eventos Laureal"
+              src={wedding.venueMapEmbedUrl}
               loading="lazy"
-            />
-            <figcaption>Nos vemos bajo las luces</figcaption>
+              allowfullscreen
+              referrerpolicy="no-referrer"
+            ></iframe>
+            <figcaption>Aquí nos encontraremos</figcaption>
           </figure>
         </div>
       </section>
@@ -209,12 +165,7 @@
         <div class="botanical botanical--two" aria-hidden="true"></div>
         <div class="chapter__content split split--40-60">
           <figure class="split__media portrait-frame reveal">
-            <img
-              data-image="gifts"
-              src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1000&q=85"
-              alt="Pareja de recién casados tomados de la mano"
-              loading="lazy"
-            />
+            <Photo src={wedding.images.gifts} alt="Pareja de recién casados tomados de la mano" />
             <figcaption>El mejor regalo es compartir contigo</figcaption>
           </figure>
           <div class="split__copy reveal reveal--right">
@@ -222,15 +173,13 @@
             <p class="eyebrow">Con cariño</p>
             <h2 class="display-title">Regalos</h2>
             <p class="script-accent">Tu presencia es nuestro regalo</p>
-            <p class="lead" data-text="giftMessage">
-              Si además deseas obsequiarnos algo, puedes ayudarnos a construir nuestra próxima aventura.
-            </p>
+            <p class="lead" data-text="giftMessage">{display.giftMessage}</p>
 
             <div class="gift-card">
               <div class="gift-card__icon" aria-hidden="true">✦</div>
               <div>
                 <span>Transferencia o SINPE</span>
-                <strong data-text="giftSummary">La información se compartirá próximamente</strong>
+                <strong data-text="giftSummary">{display.giftSummary}</strong>
               </div>
               <button class="copy-gift" type="button" data-copy="giftDetails" hidden>Copiar</button>
             </div>
@@ -248,31 +197,14 @@
             <p class="eyebrow">Acompáñanos</p>
             <h2 class="display-title">Confirma tu asistencia</h2>
             <p class="lead">
-              Queremos guardar un lugar para ti. Por favor responde antes del
-              <strong data-text="rsvpDeadline">1 de noviembre de 2027</strong>.
+              Esta invitación es individual y reserva un lugar para ti. Por favor responde antes del
+              <strong data-text="rsvpDeadline">{display.rsvpDeadline}</strong>.
             </p>
 
-            <form class="rsvp-form" novalidate>
-              <div class="field field--full">
-                <label for="full-name">Nombre completo</label>
-                <input id="full-name" name="nombre" type="text" autocomplete="name" required />
-                <span class="field__error">Escribe tu nombre completo.</span>
-              </div>
-
-              <button class="button button--dark submit-button" type="submit">
-                <span>Enviar confirmación</span>
-                <i aria-hidden="true"></i>
-              </button>
-              <p class="form-status" role="status" aria-live="polite"></p>
-            </form>
+            <RsvpForm client:load />
           </div>
           <figure class="split__media portrait-frame portrait-frame--tall reveal reveal--right">
-            <img
-              data-image="rsvp"
-              src="https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1000&q=85"
-              alt="Pareja compartiendo un momento romántico"
-              loading="lazy"
-            />
+            <Photo src={wedding.images.rsvp} alt="Pareja compartiendo un momento romántico" />
             <figcaption>¿Bailamos?</figcaption>
           </figure>
         </div>
@@ -285,15 +217,17 @@
           <p>Arrastra, explora y revive la historia con nosotros.</p>
         </div>
         <div class="moments__viewport" tabindex="0" aria-label="Galería de nuestros momentos">
-          <div class="moments__track" data-gallery-track></div>
+          <div class="moments__track" data-gallery-track>
+{[...wedding.gallery, ...wedding.gallery].map((photo,index) => <figure class="moment-card" tabindex={index < wedding.gallery.length ? 0 : -1} role="button" data-index={index % wedding.gallery.length} aria-label={`Ampliar: ${photo.caption}`} aria-hidden={index >= wedding.gallery.length ? "true" : undefined}><Photo src={photo.src} alt={photo.alt} /><figcaption>{photo.caption}</figcaption></figure>)}
+</div>
         </div>
       </section>
     </main>
 
     <footer class="footer">
       <p class="footer__script">Nos vemos en la pista</p>
-      <p class="footer__names"><span data-text="partnerOne">Mariamalia</span> <i>&</i> <span data-text="partnerTwo">Akion</span></p>
-      <p class="footer__date" data-text="shortDate">12 · 12 · 2027</p>
+      <p class="footer__names"><span data-text="partnerOne">{display.partnerOne}</span> <i>&</i> <span data-text="partnerTwo">{display.partnerTwo}</span></p>
+      <p class="footer__date" data-text="shortDate">{display.shortDate}</p>
       <a href="#inicio" aria-label="Volver al inicio">↑</a>
     </footer>
 
@@ -305,11 +239,10 @@
       <p></p>
     </dialog>
 
-    <audio class="wedding-audio" loop preload="none"></audio>
+    
     <noscript>
       <p class="noscript-message">Activa JavaScript para ver la cuenta regresiva y enviar tu confirmación.</p>
     </noscript>
-    <script src="assets/js/config.js"></script>
-    <script src="assets/js/main.js"></script>
-  </body>
-</html>
+
+<script>import "../scripts/invitation";</script>
+</Layout>

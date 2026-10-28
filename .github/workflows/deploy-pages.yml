@@ -1,41 +1,86 @@
-name: Deploy wedding invitation to GitHub Pages
+name: Validate and deploy wedding platform
 
 on:
+  pull_request:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: github-pages
+  group: wedding-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Deploy to GitHub Pages
+  quality:
+    name: Types, security and browser tests
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      PUBLIC_SUPABASE_URL: https://test-project.supabase.co
+      PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_test
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v6
-
-      - name: Upload static site
-        uses: actions/upload-pages-artifact@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          path: .
-          include-hidden-files: true
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run test:db:embedded
+      - run: npm run check:edge
+      - run: npm run test:edge
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: browser-failures
+          path: test-results/
+          retention-days: 7
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+  database:
+    name: Supabase database integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npx supabase db start
+      - run: npm run test:db
+      - run: npx supabase stop
+        if: always()
+
+  deploy:
+    name: Cloudflare Pages
+    needs: [quality, database]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PAGES_PROJECT != ''
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+      PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Require production frontend configuration
+        run: node -e "if (!process.env.PUBLIC_SITE_URL || !process.env.PUBLIC_SUPABASE_URL || !process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY) throw new Error('Set production public build variables')"
+      - run: npm ci
+      - run: npm run build
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main

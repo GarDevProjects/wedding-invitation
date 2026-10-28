@@ -1,203 +1,91 @@
-# Mariamalia & Akion — Invitación de boda
+# Akion & Mariamalia — Wedding invitation platform
 
-Una invitación digital editorial, elegante y completamente responsive. Está hecha con HTML, CSS y JavaScript puro para que pueda publicarse gratis en GitHub Pages sin instalar dependencias ni ejecutar un proceso de compilación.
+The existing Spanish invitation design, editorial sections, photo carousel/lightbox, music, maps, countdown, calendar download and gift details are preserved. The site now uses **Astro + TypeScript + React islands + Tailwind CSS**, with **Supabase PostgreSQL/Auth/Realtime/Edge Functions** and **Cloudflare Pages** deployment support.
 
-## Lo que ya incluye
+Start with [MANUAL_SETUP.md](MANUAL_SETUP.md) to enable real invitations and administration. The migration adds the application code; it does not create provider accounts, deploy infrastructure or provision administrator credentials.
 
-- Portada fotográfica horizontal con música activada por el invitado.
-- Fecha y hora calculadas desde una sola configuración, con cuenta regresiva en tiempo real.
-- Secciones 60/40 y 40/60 para fecha, dress code, ubicación, regalos y RSVP.
-- Enlace directo a Waze y archivo de calendario `.ics` descargable.
-- Formulario individual de confirmación mediante el nombre del invitado.
-- Carrusel infinito de fotos verticales uniformes y galería ampliada.
-- Animaciones de entrada, parallax suave, textura editorial y alternativa sin movimiento.
-- Diseño adaptado a móvil, navegación por teclado, mensajes accesibles y modo de impresión.
-- Fotografías provisionales de Unsplash que puedes sustituir por las propias.
+## Run locally
 
-## Personalización rápida
+Install Node.js 24 LTS, then:
 
-Toda la información editable está en [`assets/js/config.js`](assets/js/config.js). Cambia, como mínimo:
-
-```js
-partnerOne: "Mariamalia",
-partnerTwo: "Akion",
-weddingDate: "2027-12-12T16:00:00-06:00",
-venueName: "Nombre del lugar",
-venueAddress: "Dirección exacta",
-city: "Ciudad, Costa Rica",
-wazeUrl: "https://www.waze.com/ul?...",
-rsvpDeadline: "2027-11-01T23:59:59-06:00",
+```sh
+npm ci
+cp .env.example .env
+npm run dev
 ```
 
-La zona horaria ya está configurada como `America/Costa_Rica`. El formato de fecha incluye el desfase `-06:00`, así que la cuenta regresiva será correcta incluso para invitados que abran la invitación desde otro país.
+PowerShell: use `Copy-Item .env.example .env` instead of `cp` if preferred. Replace the sample environment values. Without Supabase configuration the public invitation remains viewable and the RSVP/admin areas explain their unavailable state.
 
-### Información pendiente antes de publicar
+For production-style deep links and security headers:
 
-- Fecha y hora definitivas de la ceremonia.
-- Nombre del lugar, dirección exacta y enlace de Waze.
-- Hora recomendada de llegada, estacionamiento y/o transporte.
-- Código de vestimenta definitivo y colores reservados.
-- Fecha límite de confirmación.
-- Política sobre niños, si aplica.
-- Información de regalos, SINPE o transferencia.
-- Fotografías finales y canción con licencia de uso.
-- Correo que recibirá los RSVP y un número de contacto para dudas.
-
-## Sustituir las fotografías
-
-1. Copia las fotos finales a `assets/images/`.
-2. Usa nombres sencillos, por ejemplo `portada.jpg`, `fecha.jpg` y `momento-01.jpg`.
-3. En `assets/js/config.js`, reemplaza las direcciones de Unsplash por rutas locales:
-
-```js
-images: {
-  hero: "assets/images/portada.jpg",
-  date: "assets/images/fecha.jpg",
-  dressCode: "assets/images/dress-code.jpg",
-  venue: "assets/images/lugar.jpg",
-  gifts: "assets/images/regalos.jpg",
-  rsvp: "assets/images/confirmacion.jpg",
-},
+```sh
+npm run build
+npm run preview
 ```
 
-4. Actualiza también `gallery`. Cada elemento usa `src`, `alt` (descripción accesible) y `caption`.
-5. Para que la página cargue rápido, exporta las fotos a WebP o JPEG de aproximadamente 1600–2200 px para portada y 900–1200 px para verticales. Evita subir originales de cámara de muchos megabytes.
-6. Actualiza `og:image` en `index.html` con una URL pública de la portada; esa será la miniatura al compartir la invitación por WhatsApp u otras redes.
+Open `http://127.0.0.1:4321/`, `/admin/`, or `/i/<token>`. The production preview implements Cloudflare's link rewrite. The development server is for editing static content; use the production preview when testing personalized URLs.
 
-Las imágenes provisionales usan Unsplash. Su licencia permite descargarlas y utilizarlas gratuitamente, aunque se recomienda atribución; revisa además los derechos de imagen cuando aparezcan personas reconocibles ([licencia oficial de Unsplash](https://unsplash.com/license)). Sustituirlas por sus propias fotos antes de enviar la invitación evita que otras personas aparezcan como si fueran la pareja.
+## Personalize
 
-## Agregar la canción
+Edit [src/config/wedding.ts](src/config/wedding.ts). Confirmed details: **Akion & Mariamalia, January 29, 2027, arrival at 14:30 and ceremony at 15:00, America/Costa_Rica**, at Sala de Eventos Laureal. The default RSVP deadline is **January 1, 2027 at 23:59:59 -06:00**. The venue map and directions use the supplied Waze location.
 
-Los navegadores bloquean el audio automático. Por eso la música empieza únicamente cuando el invitado presiona el botón central; mientras no agregues una canción, ese botón reproduce un fondo ambiental generado por el navegador.
+Import replacement photos from `src/assets/photos/` in the configuration file. Astro generates responsive AVIF/WebP/JPEG images. Existing stock-photo sources are recorded in [the photo provenance file](src/assets/photos/README.md). The existing MP3 is in `public/audio/song.mp3` and loads only after a music-button click. Fonts are served locally.
 
-1. Usa una canción propia o un archivo para el que tengas permiso.
-2. Copia el MP3 a `assets/audio/nuestra-cancion.mp3`.
-3. Edita la sección `music` en `assets/js/config.js`:
+The public page is static HTML. React hydrates only the RSVP island and the separate admin dashboard. Auth and Realtime libraries are loaded by the admin page; guests use a small fetch client. Existing CSS preserves the design, while Tailwind utilities support the dashboard without applying a global reset.
 
-```js
-music: {
-  src: "assets/audio/nuestra-cancion.mp3",
-  volume: 0.35,
-  ambientFallback: true,
-},
+## Invitation rules
+
+- One named person and one seat per invitation; no guest-name lookup or extra-seat field.
+- A 256-bit random token identifies an invitation. Only its SHA-256 hash is stored, in a private schema outside the browser and Realtime publication.
+- Acceptance/decline can be changed until the invitation's server-enforced deadline. Identical retries do not add audit events.
+- Complete links are shown only when created/rotated and held in page memory. Copy them before reloading. A replacement link revokes the previous token and clears the sent marker.
+- Admins can create/edit, share manually through WhatsApp, mark sent, revoke, archive/restore, search/filter and export the current view.
+- Metrics exclude archived invitations; response rate is responded active invitations / all active invitations. An acceptance always counts as one seat.
+- Realtime changes refresh server-calculated metrics. Thirty-second polling and reconnect/visibility refreshes provide a fallback.
+- CSV exports omit tokens and neutralize spreadsheet formulas. CSV is an attendance report, not a recovery backup.
+
+## Verify
+
+```sh
+npm run check
+npm test
+npm run test:db:embedded
+npm run check:edge
+npm run test:edge
+npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
-Puedes ajustar `volume` entre `0` y `1`.
+The database tests execute the actual migration in embedded PostgreSQL with minimal Supabase Auth fixtures. With Docker and the local Supabase database available, run the same pgTAP suite against Supabase:
 
-## Activar el formulario RSVP gratis
-
-El diseño funciona sin servidor, pero recibir respuestas requiere un destino. La integración preparada usa Formspree: su plan Free parte de 50 envíos mensuales y conserva 30 días de historial, según sus [límites oficiales](https://help.formspree.io/articles/account-management/account-limits).
-
-1. Crea y verifica una cuenta en [Formspree](https://formspree.io/).
-2. En el panel, pulsa `+` y luego **New Form**.
-3. Abre la sección **Integration** y copia el endpoint, con formato `https://formspree.io/f/xxxxxxxx`. Estos pasos coinciden con la [guía oficial de formularios HTML](https://help.formspree.io/articles/building-your-form/building-an-html-form).
-4. Pega la URL en `assets/js/config.js`:
-
-```js
-rsvpEndpoint: "https://formspree.io/f/xxxxxxxx",
+```sh
+npx supabase db start
+npm run test:db
+npx supabase stop
 ```
 
-5. Publica el sitio y haz una prueba real. El formulario ya envía con JavaScript y solicita una respuesta JSON, por lo que no saca al invitado de la página.
-6. En Formspree, activa notificaciones y, si está disponible en tu configuración, restringe el formulario al dominio publicado para reducir spam.
+Browser tests use mock API/Auth responses. CI separately runs the database suite in Supabase. Real Auth delivery, ingress, Realtime connections, hosting and real-device Safari still need the checks in MANUAL_SETUP.md.
 
-Si prefieres confirmaciones por correo, deja `rsvpEndpoint` vacío y escribe un correo en `rsvpEmail`. En ese modo, el sitio abre la aplicación de correo del invitado; es menos consistente que Formspree.
+## Deployment
 
-## Configurar Waze
+[.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) replaces the old repository-root GitHub Pages upload with type checks, unit/API/database/browser tests and an opt-in Cloudflare Pages deployment. Deployments run after checks pass when the Cloudflare project variable and required credentials are configured. Only `dist/` is deployed. Backend schema/function deployment is a separate, deliberate setup step.
 
-1. Abre [Waze Live Map](https://www.waze.com/live-map).
-2. Busca el lugar exacto.
-3. Pulsa el icono de compartir y copia el enlace de indicaciones.
-4. Pégalo en `wazeUrl` dentro de `assets/js/config.js`.
-
-Waze recomienda enlaces HTTPS con base `https://www.waze.com/ul`; en móvil abren la app si está instalada y en computadora abren la web. También puedes usar latitud/longitud y `navigate=yes`, como explica la [documentación oficial de Waze Deep Links](https://developers.google.com/waze/deeplinks?hl=es-419).
-
-## Probar localmente
-
-Para una revisión visual rápida puedes abrir `index.html` con doble clic. Para probar el sitio como se servirá en Internet, abre esta carpeta en VS Code y usa una extensión de servidor local como **Live Server**, o ejecuta uno de estos comandos si tienes Python instalado:
-
-```powershell
-py -m http.server 8000
-# En instalaciones donde el comando anterior no existe:
-python -m http.server 8000
-```
-
-Luego abre `http://localhost:8000`. Detén el servidor con `Ctrl+C`.
-
-Prueba al menos:
-
-- Portada, botón de música y navegación en móvil y escritorio.
-- Cuenta regresiva y descarga del calendario.
-- Enlace de Waze en un teléfono.
-- Envío RSVP y recepción del correo.
-- Textos largos, tildes y nombres de invitados.
-- Navegación con teclado y la opción del sistema “reducir movimiento”.
-
-## Publicar automáticamente en GitHub Pages
-
-El repositorio incluye `.github/workflows/deploy-pages.yml`. Cada `push` a `main` empaqueta el sitio y publica la versión nueva automáticamente. También puedes iniciarlo manualmente desde la pestaña **Actions** con **Run workflow**.
-
-### Configuración única en GitHub
-
-1. En GitHub abre el repositorio **wedding-invitation**.
-2. Entra en **Settings → Pages**.
-3. En **Build and deployment → Source**, selecciona **GitHub Actions**.
-4. Si GitHub muestra una configuración anterior llamada **Deploy from a branch**, sustitúyela por **GitHub Actions**. Solo necesitas hacer esto una vez.
-
-### Publicar una versión
-
-Confirma los cambios y súbelos a `main`:
-
-```powershell
-git add .
-git commit -m "Build wedding invitation"
-git push origin main
-```
-
-Después del `push`:
-
-1. Abre **Actions → Deploy wedding invitation to GitHub Pages**.
-2. Espera a que el job **Deploy to GitHub Pages** aparezca en verde.
-3. Abre la URL indicada en el resumen del despliegue. Normalmente será:
+## Source layout
 
 ```text
-https://gardevprojects.github.io/wedding-invitation/
+src/config/                 Typed wedding content and photo imports
+src/components/             Preserved invitation, responsive photos, RSVP/admin islands
+src/scripts/                Typed invitation interactions and persistent music
+src/lib/                    API, dates/calendar, admin search and CSV utilities
+src/pages/                  Static invitation, link shell and admin page
+src/styles/                 Existing visual system plus Tailwind utilities
+public/                     Audio, favicon, privacy headers and link rewrites
+supabase/migrations/        Database schema, RLS and transactional functions
+supabase/functions/         Token API, admin authorization and input validation
+supabase/tests/database/    pgTAP authorization and RSVP lifecycle tests
+scripts/                    Security-header generation, preview and embedded DB tests
+tests/                      Unit and desktop/mobile browser tests
 ```
 
-El workflow utiliza los permisos mínimos requeridos (`contents: read`, `pages: write` e `id-token: write`), el entorno oficial `github-pages` y evita que dos despliegues se ejecuten simultáneamente. Su estructura sigue la [documentación oficial para despliegues automáticos](https://docs.github.com/en/get-started/start-your-journey/deploying-your-website-automatically) y la [guía de workflows personalizados de Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
-
-Para un dominio propio, configúralo primero en **Settings → Pages → Custom domain** y después crea los registros DNS indicados por GitHub. Consulta la [guía oficial de dominios personalizados](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
-
-## Privacidad importante
-
-GitHub Pages es público en Internet, incluso cuando ciertos planes permiten que el repositorio fuente sea privado. Todo lo escrito en `config.js` —incluidos SINPE, cuentas, direcciones y el endpoint del formulario— puede ser visto por cualquier visitante.
-
-- No incluyas claves, contraseñas, PIN, documentos de identidad ni credenciales bancarias.
-- Publica únicamente los datos de transferencia que entregarías normalmente a tus invitados.
-- Si la ubicación o los datos bancarios deben ser privados, comparte esos detalles después del RSVP por un canal privado. Una pantalla de “contraseña” hecha solo con JavaScript no ofrece protección real.
-- Revisa las respuestas recopiladas y la política de retención del proveedor del formulario.
-
-## Decisiones de diseño investigadas
-
-El patrón de una sola página mantiene la invitación fácil de consultar desde el teléfono. Las plataformas y plantillas actuales suelen agrupar portada, fecha/cuenta regresiva, ubicación, galería, regalos y RSVP; las guías de Squarespace también priorizan que los invitados puedan encontrar rápidamente la dirección y la información esencial en móvil ([guía de sitios de boda](https://support.squarespace.com/hc/en-us/articles/214138818-Building-a-wedding-site), [ejemplo Webflow con RSVP y countdown](https://webflow.com/templates/html/bridaltnc-wedding-website-template)).
-
-La dirección visual se inspira en invitaciones impresas de lujo: tipografía editorial de gran escala, serif con contraste, caligrafía usada solo como acento, paleta de papel/olivo/rosa viejo, marcos finos y fotografías con tratamiento consistente. La animación apoya la narrativa —entrada, ritmo de scroll y galería— pero no oculta información. El sitio respeta `prefers-reduced-motion`, una preferencia diseñada para reducir animaciones que pueden provocar distracción o malestar ([explicación de web.dev](https://web.dev/articles/prefers-reduced-motion)).
-
-## Estructura
-
-```text
-wedding-invitation/
-├── .github/workflows/deploy-pages.yml
-├── index.html
-├── .nojekyll
-├── assets/
-│   ├── favicon.svg
-│   ├── audio/
-│   ├── images/
-│   ├── css/styles.css
-│   └── js/
-│       ├── config.js   # contenido editable
-│       └── main.js     # interacciones
-└── README.md
-```
-
-No hay dependencias, claves de API ni pasos de compilación.
+See [MIGRATION_REPORT.md](MIGRATION_REPORT.md) for the audit, technology decisions and verification limits. The original [migration.md](migration.md) remains the requested blueprint.

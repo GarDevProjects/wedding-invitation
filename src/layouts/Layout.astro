@@ -1,0 +1,23 @@
+---
+import '../styles/global.css';
+import { wedding } from '../config/wedding';
+const { title = `${wedding.partnerOne} & ${wedding.partnerTwo} — Nuestra boda` } = Astro.props;
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2eee7" />
+    <meta name="description" content="Nuestra invitación de boda. Fecha, ubicación, código de vestimenta y confirmación de asistencia." />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content="Nos encantaría celebrar este día contigo." />
+    <meta property="og:image" content={new URL(wedding.images.hero.src, Astro.url.origin).href} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{title}</title>
+  </head>
+  <body><slot /></body>
+</html>

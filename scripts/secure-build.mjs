@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
@@ -16,7 +16,16 @@ async function inspect(directory) {
     }
   }
 }
-await inspect('dist');
+// Static Astro emits dist/index.html. The Cloudflare adapter emits dist/client/index.html.
+// Put the generated policy beside the HTML that the host actually serves.
+let staticDirectory = 'dist';
+try {
+  await access('dist/client/index.html');
+  staticDirectory = 'dist/client';
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
+await inspect(staticDirectory);
 const headers = await readFile('public/_headers', 'utf8');
-await writeFile('dist/_headers', headers.replace("script-src 'self';", `script-src 'self' ${[...hashes].join(' ')};`));
-console.log(`Security headers include ${hashes.size} hashes for Astro hydration scripts.`);
+await writeFile(join(staticDirectory, '_headers'), headers.replace("script-src 'self';", `script-src 'self' ${[...hashes].join(' ')};`));
+console.log(`Security headers include ${hashes.size} hashes for Astro hydration scripts in ${staticDirectory}/_headers.`);

@@ -111,8 +111,8 @@ requestAnimationFrame(shift);
 const renderPhoto = () => {
   const cardImage = $<HTMLImageElement>('img', cards[activeIndex]);
   const image = $<HTMLImageElement>('img', lightbox);
-  image.src = cardImage.currentSrc || cardImage.src; image.alt = cardImage.alt;
-  $('p', lightbox).textContent = wedding.gallery[activeIndex].caption;
+  image.src = cards[activeIndex].dataset.fullSrc || cardImage.currentSrc || cardImage.src; image.alt = cardImage.alt;
+  $('p', lightbox).textContent = `${wedding.gallery[activeIndex].caption} · ${activeIndex + 1} / ${wedding.gallery.length}`;
 };
 const showPhoto = (card: HTMLElement) => {
   activeIndex = Number(card.dataset.index); returnFocus = card; renderPhoto(); lightbox.showModal(); document.body.classList.add('lightbox-open');

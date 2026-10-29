@@ -988,7 +988,7 @@ img {
   width: max-content;
   gap: clamp(1rem, 2vw, 2rem);
   padding: 0 clamp(1rem, 2vw, 2rem);
-  animation: gallery-scroll 45s linear infinite;
+  animation: gallery-scroll var(--gallery-duration, 45s) linear infinite;
   will-change: transform;
 }
 

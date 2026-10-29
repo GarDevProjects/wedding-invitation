@@ -1,15 +1,20 @@
-# Existing image provenance
+# Personal photo collection
 
-The local hero is the photo supplied in the original repository. These other images preserve the original Unsplash placeholders; replace them with licensed wedding photos before distribution. They are now downloaded at build source, not requested by guests.
+The active invitation uses the 39 personal photos supplied by Akion and Mariamalia. Photo 2 is intentionally named `hero.jpg`; the other files are `1.jpg` and `3.jpg` through `39.jpg`.
 
-- `photo-0.jpg`: https://images.unsplash.com/photo-1511285560929-80b456fea0bc
-- `photo-1.jpg`: https://images.unsplash.com/photo-1544078751-58fee2d8a03b
-- `photo-2.jpg`: https://images.unsplash.com/photo-1507501336603-6e31db2be093
-- `photo-3.jpg`: https://images.unsplash.com/photo-1520854221256-17451cc331bf
-- `photo-4.jpg`: https://images.unsplash.com/photo-1529636798458-92182e662485
-- `photo-5.jpg`: https://images.unsplash.com/photo-1522673607200-164d1b6ce486
-- `photo-6.jpg`: https://images.unsplash.com/photo-1519225421980-715cb0215aed
-- `photo-7.jpg`: https://images.unsplash.com/photo-1606216794074-735e91aa2c92
-- `photo-8.jpg`: https://images.unsplash.com/photo-1523438885200-e635ba2c371e
+Assignments and accessible gallery descriptions are in `src/config/photos.ts`:
 
-Replace imports in `src/config/wedding.ts` when adding new photos. Astro generates responsive AVIF/WebP and JPEG fallbacks.
+| Placement | Photo |
+| --- | --- |
+| Hero / social preview | `hero.jpg` (photo 2) |
+| Save the date | `1.jpg` |
+| Dress code | `32.jpg` |
+| Gifts | `38.jpg` |
+| RSVP | `19.jpg` |
+| Carousel | All 39, in numeric order |
+
+The venue retains its interactive map. Old `photo-*.jpg` placeholders and `hero2.jpg` are not imported or displayed; the originals remain on disk.
+
+Numbered `.jpg` files are discovered automatically and sorted numerically. Add corresponding descriptions in `photos.ts` when adding new images. Keep `hero.jpg` as the cover/photo 2.
+
+Astro produces responsive section images and lightweight carousel thumbnails. The lightbox loads a separate 1600px WebP only when opened, preserving each photo's full composition. Original photos are not modified. Carousel duration scales with the collection size to preserve its scrolling speed.

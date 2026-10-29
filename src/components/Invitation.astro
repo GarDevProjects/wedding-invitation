@@ -4,6 +4,11 @@ import Photo from "./Photo.astro";
 import RsvpForm from "./RsvpForm";
 import { wedding } from "../config/wedding";
 import { display } from "../lib/dates";
+import { getImage } from 'astro:assets';
+const galleryPhotos = await Promise.all(wedding.gallery.map(async photo => ({
+  ...photo,
+  full: (await getImage({ src: photo.src, width: Math.min(1600, photo.src.width), format: 'webp', quality: 82 })).src,
+})));
 ---
 <Layout>
 <dialog class="opening" aria-labelledby="opening-title"><div class="opening__inner"><p class="eyebrow">Una invitación para ti</p><p class="opening__monogram">A<span>&</span>M</p><h2 id="opening-title">Nuestro para siempre</h2><p>{display.partnerOne} & {display.partnerTwo}</p><p data-personalized-welcome hidden></p><p>{display.shortDate}</p><button class="button button--dark" type="button" data-open-invitation>Abrir invitación</button><p class="fine-print">La música es opcional. Actívala cuando quieras.</p></div></dialog>
@@ -12,7 +17,7 @@ import { display } from "../lib/dates";
     <div class="site-grain" aria-hidden="true"></div>
 
     <header class="hero" id="inicio">
-      <Photo src={wedding.images.hero} alt="Pareja celebrando su boda al aire libre" class="hero__image" hero />
+      <Photo src={wedding.images.hero} alt={wedding.imageAlt.hero} class="hero__image" hero />
       <div class="hero__veil" aria-hidden="true"></div>
 
       <nav class="topbar" aria-label="Navegación principal">
@@ -80,7 +85,7 @@ import { display } from "../lib/dates";
             </button>
           </div>
           <figure class="split__media portrait-frame reveal reveal--right">
-            <Photo src={wedding.images.date} alt="Pareja de recién casados caminando" />
+            <Photo src={wedding.images.date} alt={wedding.imageAlt.date} />
             <figcaption>Nuestro para siempre comienza aquí</figcaption>
           </figure>
         </div>
@@ -90,7 +95,7 @@ import { display } from "../lib/dates";
         <div class="botanical botanical--one" aria-hidden="true"></div>
         <div class="chapter__content split split--40-60">
           <figure class="split__media portrait-frame portrait-frame--tall reveal">
-            <Photo src={wedding.images.dressCode} alt="Detalle elegante de una celebración de boda" />
+            <Photo src={wedding.images.dressCode} alt={wedding.imageAlt.dressCode} />
             <figcaption>Una noche para recordar</figcaption>
           </figure>
           <div class="split__copy reveal reveal--right">
@@ -165,7 +170,7 @@ import { display } from "../lib/dates";
         <div class="botanical botanical--two" aria-hidden="true"></div>
         <div class="chapter__content split split--40-60">
           <figure class="split__media portrait-frame reveal">
-            <Photo src={wedding.images.gifts} alt="Pareja de recién casados tomados de la mano" />
+            <Photo src={wedding.images.gifts} alt={wedding.imageAlt.gifts} />
             <figcaption>El mejor regalo es compartir contigo</figcaption>
           </figure>
           <div class="split__copy reveal reveal--right">
@@ -204,7 +209,7 @@ import { display } from "../lib/dates";
             <RsvpForm client:load />
           </div>
           <figure class="split__media portrait-frame portrait-frame--tall reveal reveal--right">
-            <Photo src={wedding.images.rsvp} alt="Pareja compartiendo un momento romántico" />
+            <Photo src={wedding.images.rsvp} alt={wedding.imageAlt.rsvp} />
             <figcaption>¿Bailamos?</figcaption>
           </figure>
         </div>
@@ -217,8 +222,8 @@ import { display } from "../lib/dates";
           <p>Arrastra, explora y revive la historia con nosotros.</p>
         </div>
         <div class="moments__viewport" tabindex="0" aria-label="Galería de nuestros momentos">
-          <div class="moments__track" data-gallery-track>
-{[...wedding.gallery, ...wedding.gallery].map((photo,index) => <figure class="moment-card" tabindex={index < wedding.gallery.length ? 0 : -1} role="button" data-index={index % wedding.gallery.length} aria-label={`Ampliar: ${photo.caption}`} aria-hidden={index >= wedding.gallery.length ? "true" : undefined}><Photo src={photo.src} alt={photo.alt} /><figcaption>{photo.caption}</figcaption></figure>)}
+          <div class="moments__track" data-gallery-track style={`--gallery-duration: ${galleryPhotos.length * 7.5}s`}>
+{[...galleryPhotos, ...galleryPhotos].map((photo,index) => <figure class="moment-card" tabindex={index < galleryPhotos.length ? 0 : -1} role="button" data-index={index % galleryPhotos.length} data-full-src={photo.full} aria-label={`Ampliar: ${photo.caption}`} aria-hidden={index >= galleryPhotos.length ? "true" : undefined}><Photo src={photo.src} alt={photo.alt} gallery /><figcaption>{photo.caption}</figcaption></figure>)}
 </div>
         </div>
       </section>

@@ -7,6 +7,10 @@ test('retains the invitation, opens accessibly, defers audio and supports the ga
   page.on('console', message => { if (message.type() === 'error' && message.text().includes('Content Security Policy')) errors.push(message.text()); });
   let audioRequests = 0;
   page.on('request', request => { if (request.url().endsWith('.mp3')) audioRequests++; });
+  // Keep gallery/control checks independent of third-party map visitor tracking and availability.
+  await page.route('https://embed.waze.com/**', route => route.fulfill({
+    contentType: 'text/html', body: '<!doctype html><html lang="es"><body>Mapa del lugar de la boda</body></html>',
+  }));
   await page.goto('/');
   await expect(page.getByRole('dialog', { name: 'Nuestro para siempre' })).toBeVisible();
   expect(audioRequests).toBe(0);
@@ -20,10 +24,22 @@ test('retains the invitation, opens accessibly, defers audio and supports the ga
   await page.getByRole('button', { name: 'Agendar la fecha' }).click();
   expect((await download).suggestedFilename()).toMatch(/\.ics$/);
   const photo = page.locator('.moment-card').first();
+  await expect(page.locator('.moment-card[tabindex="0"]')).toHaveCount(39);
+  await expect(page.locator('.moment-card[aria-hidden="true"]')).toHaveCount(39);
   await photo.focus(); await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog', { name: 'Vista ampliada de la foto' })).toBeVisible();
+  await expect(page.locator('.lightbox img')).toHaveAttribute('src', (await photo.getAttribute('data-full-src'))!);
+  await expect(page.locator('.lightbox p')).toContainText('1 / 39');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.lightbox p')).toContainText('39 / 39');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.lightbox p')).toContainText('1 / 39');
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('Escape');
   await expect(photo).toBeFocused();
+  await page.locator('.moments__viewport').scrollIntoViewIfNeeded();
+  await expect(page.locator('.moments__heading')).toHaveCSS('opacity', '1');
+  await expect.poll(() => photo.locator('img').evaluate(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)).toBe(true);
+  await page.locator('.moments').screenshot({ path: `.tools/gallery-${test.info().project.name}.png` });
   await page.getByRole('button', { name: 'Reproducir música' }).click();
   await expect(page.getByRole('button', { name: 'Pausar música' })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: 'Pausar música' }).click();

@@ -1,16 +1,7 @@
-import hero from "../assets/photos/hero.jpg";
-import photo0 from "../assets/photos/photo-0.jpg";
-import photo1 from "../assets/photos/photo-1.jpg";
-import photo2 from "../assets/photos/photo-2.jpg";
-import photo3 from "../assets/photos/photo-3.jpg";
-import photo4 from "../assets/photos/photo-4.jpg";
-import photo5 from "../assets/photos/photo-5.jpg";
-import photo6 from "../assets/photos/photo-6.jpg";
-import photo7 from "../assets/photos/photo-7.jpg";
-import photo8 from "../assets/photos/photo-8.jpg";
+import { images, imageAlt, gallery } from './photos';
 
 // Confirmed: January 29, 2027, arrival 14:30 and ceremony 15:00, Costa Rica time.
-/** Edit the wedding content here. Import replacement photos from src/assets/photos. */
+/** Edit the wedding content here. Section assignments and gallery captions are in ./photos.ts. */
 export const wedding = {
   partnerOne: "Akion",
   partnerTwo: "Mariamalia",
@@ -50,47 +41,9 @@ export const wedding = {
     ambientFallback: true,
   },
 
-  images: {
-    hero: hero,
-    date: photo0,
-    dressCode: photo1,
-    venue: photo2,
-    gifts: photo3,
-    rsvp: photo4,
-  },
-
-  gallery: [
-    {
-      src: photo0,
-      alt: "Pareja de recién casados caminando",
-      caption: "El comienzo",
-    },
-    {
-      src: photo5,
-      alt: "Pareja compartiendo un momento al aire libre",
-      caption: "Juntos es mejor",
-    },
-    {
-      src: photo6,
-      alt: "Celebración romántica",
-      caption: "Sí a la aventura",
-    },
-    {
-      src: photo7,
-      alt: "Pareja celebrando su compromiso",
-      caption: "Nuestro lugar feliz",
-    },
-    {
-      src: photo8,
-      alt: "Detalle de manos de una pareja",
-      caption: "De tu mano",
-    },
-    {
-      src: photo1,
-      alt: "Una pareja durante una celebración elegante",
-      caption: "Para siempre",
-    },
-  ],
+  images,
+  imageAlt,
+  gallery,
   timeline: [
     { time: "14:30", title: "Bienvenida", detail: "Lleguemos con tiempo para compartir." },
     { time: "15:00", title: "Ceremonia", detail: "El comienzo de nuestro para siempre." },

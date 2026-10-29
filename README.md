@@ -29,7 +29,7 @@ Open `http://127.0.0.1:4321/`, `/admin/`, or `/i/<token>`. The production previe
 
 Edit [src/config/wedding.ts](src/config/wedding.ts). Confirmed details: **Akion & Mariamalia, January 29, 2027, arrival at 14:30 and ceremony at 15:00, America/Costa_Rica**, at Sala de Eventos Laureal. The default RSVP deadline is **January 1, 2027 at 23:59:59 -06:00**. The venue map and directions use the supplied Waze location.
 
-Import replacement photos from `src/assets/photos/` in the configuration file. Astro generates responsive AVIF/WebP/JPEG images. Existing stock-photo sources are recorded in [the photo provenance file](src/assets/photos/README.md). The existing MP3 is in `public/audio/song.mp3` and loads only after a music-button click. Fonts are served locally.
+The invitation uses all 39 personal photos in `src/assets/photos/`, with photo 2 named `hero.jpg`. Edit section assignments and gallery descriptions in [src/config/photos.ts](src/config/photos.ts). Numbered JPGs are discovered in numeric order; legacy stock photos are excluded. Astro generates responsive section images, small carousel thumbnails and larger WebP lightbox images loaded on demand. See [the photo collection notes](src/assets/photos/README.md). The existing MP3 is in `public/audio/song.mp3` and loads only after a music-button click. Fonts are served locally.
 
 The public page is static HTML. React hydrates only the RSVP island and the separate admin dashboard. Auth and Realtime libraries are loaded by the admin page; guests use a small fetch client. Existing CSS preserves the design, while Tailwind utilities support the dashboard without applying a global reset.
 

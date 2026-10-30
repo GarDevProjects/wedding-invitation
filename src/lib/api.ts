@@ -23,6 +23,9 @@ export function invitationToken(pathname: string): string | null {
 }
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === 'DUPLICATE_GUEST') return 'No se importó el lote: ya existe una invitación con el mismo nombre y teléfono (incluidas las archivadas). Revisa la lista y elimina esa fila del CSV.';
+    if (error.code === 'BATCH_CONFLICT') return 'El lote cambió. Selecciona de nuevo el archivo y revisa la vista previa.';
+    if (error.code === 'RESET_CHANGED') return 'Las invitaciones o respuestas cambiaron. Cancela y vuelve a preparar el reinicio para revisar el total actualizado.';
     if (error.code === 'INVALID_LINK') return 'Esta invitación no está disponible. Solicita tu enlace a la pareja.';
     if (error.code === 'DEADLINE_PASSED') return 'El plazo para responder ha terminado. Contacta a la pareja.';
     if (error.status === 400) return 'Revisa los datos y la fecha límite antes de intentar de nuevo.';

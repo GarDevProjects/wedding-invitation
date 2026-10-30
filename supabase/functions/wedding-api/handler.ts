@@ -23,7 +23,7 @@ export const handler = async (request: Request) => {
     const { data: allowed, error: rateError } = await db.rpc('consume_rate_limit', { p_bucket: await sha256(`${salt}:ip:${ip}`), p_limit: 120, p_seconds: 600 });
     if (rateError) throw rateError;
     if (!allowed) throw new HttpError(429, 'RATE_LIMITED');
-    const parsed = requestSchema.safeParse(await boundedJson(request));
+    const parsed = requestSchema.safeParse(await boundedJson(request, 128 * 1024));
     if (!parsed.success) throw new HttpError(400, 'INVALID_INPUT');
     const input = parsed.data;
     if (input.action === 'resolve' || input.action === 'respond') {
@@ -57,6 +57,17 @@ export const handler = async (request: Request) => {
       const { data, error } = await db.rpc('create_invitation', { p_full_name: input.full_name, p_phone: input.phone, p_expires_at: input.expires_at });
       if (error) throw error; return reply(data, 201);
     }
+    if (input.action === 'import') {
+      const { data, error } = await db.rpc('import_invitations', { p_batch_id: input.batch_id, p_guests: input.guests });
+      if (error) throw error; return reply(data, data.already_imported ? 200 : 201);
+    }
+    if (input.action === 'reset_preview') {
+      const { data, error } = await db.rpc('admin_reset_preview'); if (error) throw error; return reply(data);
+    }
+    if (input.action === 'reset') {
+      const { data, error } = await db.rpc('reset_invitations', { p_confirmation: input.confirmation, p_version: input.version });
+      if (error) throw error; return reply(data);
+    }
     if (input.action === 'rotate') {
       const { data, error } = await db.rpc('rotate_invitation', { p_id: input.id }); if (error) throw error; return reply(data);
     }
@@ -72,7 +83,7 @@ export const handler = async (request: Request) => {
     if (error instanceof HttpError) return reply({ error: error.code }, error.status);
     // SQL errors may contain private data. Return only a fixed allowlist; never log bodies or tokens.
     const message = error && typeof error === 'object' && 'message' in error ? String(error.message) : '';
-    const status: Record<string, number> = { INVALID_LINK: 404, DEADLINE_PASSED: 409, INVALID_INPUT: 400, INVALID_DEADLINE: 400, NOT_FOUND: 404 };
+    const status: Record<string, number> = { INVALID_LINK: 404, DEADLINE_PASSED: 409, INVALID_INPUT: 400, INVALID_DEADLINE: 400, NOT_FOUND: 404, DUPLICATE_GUEST: 409, BATCH_CONFLICT: 409, RESET_CHANGED: 409 };
     if (message in status) return reply({ error: message }, status[message]);
     return reply({ error: 'UNAVAILABLE' }, 503);
   }

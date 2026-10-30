@@ -22,6 +22,9 @@ Deno.test('API validates origin, token, Auth identity and administrator membersh
       ? Response.json({ message: 'secret guest details in internal database error' }, { status: 500 })
       : Response.json({ full_name: 'María López', status: 'pending', notes: '', can_respond: true, expires_at: '2027-01-16T05:59:59Z' });
     if (url.includes('/rpc/admin_snapshot')) return Response.json({ invitations: [], metrics: { total: 0 }, fetched_at: new Date().toISOString() });
+    if (url.includes('/rpc/import_invitations')) return Response.json({ already_imported: false, created_count: 1, invitations: [] });
+    if (url.includes('/rpc/admin_reset_preview')) return Response.json({ count: 1, version: token });
+    if (url.includes('/rpc/reset_invitations')) return Response.json({ deleted_count: 1 });
     throw new Error('Unexpected network call: ' + url);
   };
   const request = (body: unknown, jwt?: string, origin = 'https://wedding.example') => handler(new Request('https://test-project.supabase.co/functions/v1/wedding-api', {
@@ -56,6 +59,27 @@ Deno.test('API validates origin, token, Auth identity and administrator membersh
     await t.step('authorized admin gets a server snapshot', async () => {
       admin = true; const response = await request({ action: 'list' }, 'valid-jwt');
       assert.equal(response.status, 200); assert.deepEqual((await response.json()).invitations, []);
+    });
+    await t.step('bulk and reset operations require verified administrator membership', async () => {
+      const actions = [
+        { action: 'import', batch_id: '00000000-0000-4000-8000-000000000010', guests: [{ full_name: 'Ana López', phone: '', expires_at: '2027-01-01T23:59:59-06:00' }] },
+        { action: 'reset_preview' },
+        { action: 'reset', confirmation: 'BORRAR TODO', version: token },
+      ];
+      for (const action of actions) {
+        assert.equal((await request(action)).status, 401);
+        admin = false;
+        const start = calls.length;
+        assert.equal((await request(action, 'valid-jwt')).status, 403);
+        assert.ok(!calls.slice(start).some(url => /rpc\/(import_invitations|reset_invitations|admin_reset_preview)/.test(url)));
+        admin = true;
+        assert.equal((await request(action, 'valid-jwt')).status, action.action === 'import' ? 201 : 200);
+      }
+    });
+    await t.step('reset without exact confirmation and imports with forged fields are rejected', async () => {
+      assert.equal((await request({ action: 'reset', confirmation: 'yes', version: token }, 'valid-jwt')).status, 400);
+      assert.equal((await request({ action: 'import', batch_id: '00000000-0000-4000-8000-000000000010', guests: [{ full_name: 'Ana López', phone: '', expires_at: '2027-01-01T23:59:59-06:00', token }] }, 'valid-jwt')).status, 400);
+      assert.equal((await request({ action: 'reset', confirmation: 'BORRAR TODO', version: token, extra: 'x'.repeat(131072) }, 'valid-jwt')).status, 413);
     });
     await t.step('internal errors never expose private data', async () => {
       failDatabase = true; const response = await request({ action: 'resolve', token });

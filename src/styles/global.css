@@ -1250,6 +1250,15 @@ button:disabled { cursor: wait; opacity: .6; transform: none; }
 .status-badge--accepted { color: var(--ink); background: color-mix(in srgb, var(--sage) 30%, var(--paper)); }
 .status-badge--declined { color: var(--ink); background: color-mix(in srgb, var(--taupe) 25%, var(--paper)); }
 .admin-empty { padding: 3rem 1rem; text-align: center; }
+.admin-bulk { border: 1px solid var(--line); padding: 1.25rem; margin: 1rem 0; overflow-wrap: anywhere; }
+.admin-bulk summary { cursor: pointer; font-weight: 500; }
+.admin-bulk p { max-width: 65rem; font-size: .85rem; }
+.admin-bulk .admin-form { margin-top: 1.25rem; }
+.admin-import-preview { max-height: 22rem; margin: 1rem 0; }
+.admin-import-preview caption { text-align: left; padding: .5rem 1rem; }
+.admin-import-preview th { position: sticky; top: 0; background: var(--paper); }
+.admin-reset { border-color: var(--taupe); }
+.button--danger { background: var(--ink-soft); color: var(--white); }
 .admin-recent { margin: 3rem 0; }
 .admin-recent ul { list-style: none; padding: 0; }
 .admin-recent li { padding: .75rem 0; border-bottom: 1px solid var(--line); font-size: .85rem; }

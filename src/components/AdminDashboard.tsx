@@ -6,6 +6,7 @@ import { wedding } from '../config/wedding';
 import { formatDate } from '../lib/dates';
 import { filterInvitations, fromCostaRicaInput, invitationsCsv, statusLabels, toCostaRicaInput } from '../lib/admin';
 import { guestFields, type AdminInvitation, type AdminSnapshot, type ApiRequest } from '../../supabase/functions/_shared/contracts';
+import AdminBulkTools from './AdminBulkTools';
 
 export default function AdminDashboard() {
   const [session, setSession] = useState<Session | null>(null);
@@ -149,6 +150,12 @@ export default function AdminDashboard() {
         const url = URL.createObjectURL(new Blob([invitationsCsv(rows)], { type: 'text/csv;charset=utf-8' }));
         const link = document.createElement('a'); link.href = url; link.download = 'invitaciones.csv'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
       }}>Exportar vista CSV ({rows.length})</button></div>
+      <AdminBulkTools key={userId} defaultDeadline={wedding.rsvpDeadline} busy={busy} setBusy={setBusy} request={authorizedRequest} refresh={refresh}
+        onImported={items => setLinks(previous => ({ ...previous, ...Object.fromEntries(items.map(item => [item.id, `${location.origin}/i/${item.token}`])) }))}
+        onReset={() => {
+          setLinks({}); setLatestLink(null); setEditing(null); setFormVisible(false); setSearch(''); setFilter('all'); setArchived(false); setMessage('');
+          setSnapshot(previous => previous && { invitations: [], metrics: { total: 0, sent: 0, pending: 0, accepted: 0, declined: 0, response_rate: 0 }, fetched_at: new Date().toISOString() });
+        }} />
       {latestLink && <aside className="admin-link"><strong>Guarda este enlace personal</strong><p>El enlace completo solo está disponible durante esta sesión. Si lo pierdes, genera uno nuevo; el anterior dejará de funcionar.</p><input aria-label="Enlace personal recién generado" readOnly value={latestLink.url} onFocus={event => event.target.select()} /><button className="text-link" onClick={() => void copy(latestLink.url)}>Copiar enlace</button></aside>}
       {formVisible && <form key={editing?.id ?? 'new'} ref={formRef} className="admin-form admin-editor" onSubmit={saveGuest}><h2>{editing ? 'Editar invitación' : 'Un nuevo invitado'}</h2><label>Nombre completo<input name="full_name" minLength={2} maxLength={120} required defaultValue={editing?.full_name ?? ''} /></label><label>Teléfono (opcional, incluye código de país)<input name="phone" type="tel" maxLength={30} defaultValue={editing?.phone ?? ''} /></label><label>Fecha límite · hora de Costa Rica<input name="expires_at" type="datetime-local" step="1" required defaultValue={toCostaRicaInput(editing?.expires_at ?? wedding.rsvpDeadline)} /></label><div className="flex flex-wrap gap-3"><button className="button button--dark" disabled={busy}>Guardar</button><button className="button" type="button" disabled={busy} onClick={() => setFormVisible(false)}>Cancelar</button></div></form>}
       <section className="admin-filters" aria-label="Filtrar invitaciones"><label>Buscar por nombre<input type="search" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Estado<select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">Todos</option><option value="pending">Pendientes</option><option value="accepted">Confirmados</option><option value="declined">No asistirán</option><option value="not_sent">Sin enviar</option></select></label><label className="admin-check"><input type="checkbox" checked={archived} onChange={event => setArchived(event.target.checked)} /> Ver archivadas</label></section>

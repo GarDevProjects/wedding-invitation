@@ -25,7 +25,25 @@ export const wedding = {
   dressCodeTitle: "Formal tropical",
   dressCodeDescription:
     "Elegante, fresco y listo para bailar. Trajes livianos y vestidos largos o midi son bienvenidos.",
-  dressCodeNote: "Reservemos el blanco y los tonos marfil para la novia.",
+  dressCodeNote: "Reservemos estos tonos para los novios. Por favor, evita el blanco, ivory, crema muy clara, beige muy claro y champagne muy pálido.",
+  guestColors: [
+    { name: "Olive", hex: "#68702D" },
+    { name: "Sage", hex: "#9A9A7A" },
+    { name: "Navy", hex: "#1F2E46" },
+    { name: "Cocoa", hex: "#5A4032" },
+    { name: "Espresso", hex: "#3A2518" },
+    { name: "Taupe", hex: "#A28B7C" },
+    { name: "Mushroom", hex: "#7D6A5A" },
+    { name: "Charcoal", hex: "#2B2B2B" },
+    { name: "Gold", hex: "#B4935D" },
+  ],
+  reservedColors: [
+    { name: "Blanco", hex: "#FFFFFF" },
+    { name: "Ivory", hex: "#F8F4E6" },
+    { name: "Crema muy clara", hex: "#F2EBDD" },
+    { name: "Beige muy claro", hex: "#EADDC8" },
+    { name: "Champagne muy pálido", hex: "#E8DCC6" },
+  ],
 
   giftMessage:
     "Si además deseas obsequiarnos algo, puedes ayudarnos a construir nuestra próxima aventura.",

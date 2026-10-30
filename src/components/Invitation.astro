@@ -104,13 +104,15 @@ const galleryPhotos = await Promise.all(wedding.gallery.map(async photo => ({
             <h2 class="display-title" data-text="dressCodeTitle">{display.dressCodeTitle}</h2>
             <p class="script-accent">Vístete para celebrar</p>
             <p class="lead" data-text="dressCodeDescription">{display.dressCodeDescription}</p>
-            <div class="palette" aria-label="Paleta de colores sugerida">
-              <span style="--swatch: #693f3b"><i>Borgoña</i></span>
-              <span style="--swatch: #9a7867"><i>Rosa viejo</i></span>
-              <span style="--swatch: #baa98e"><i>Champaña</i></span>
-              <span style="--swatch: #63705b"><i>Olivo</i></span>
-            </div>
+            <h3 class="palette-title" id="guest-colors-title">Colores sugeridos para invitados</h3>
+            <ul class="palette" aria-labelledby="guest-colors-title">
+              {wedding.guestColors.map(color => <li><span class="palette__swatch" style={`--swatch: ${color.hex}`} aria-hidden="true"></span><span>{color.name}</span></li>)}
+            </ul>
+            <h3 class="palette-title" id="reserved-colors-title">Reservados para los novios</h3>
             <p class="fine-print" data-text="dressCodeNote">{display.dressCodeNote}</p>
+            <ul class="palette palette--reserved" aria-labelledby="reserved-colors-title">
+              {wedding.reservedColors.map(color => <li><span class="palette__swatch" style={`--swatch: ${color.hex}`} aria-hidden="true"></span><span>{color.name}</span></li>)}
+            </ul>
           </div>
         </div>
       </section>

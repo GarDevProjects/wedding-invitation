@@ -1,6 +1,44 @@
 import { test, expect } from '@playwright/test';
+import { readdirSync } from 'node:fs';
 
 const token = 'a'.repeat(64);
+const gallerySize = readdirSync(new URL('../../src/assets/photos/', import.meta.url))
+  .filter(file => /^(?:\d+|hero)\.jpg$/.test(file)).length;
+test('gallery keeps moving during hover, focus and a held mouse or touch press', async ({ page, isMobile }) => {
+  await page.route('https://embed.waze.com/**', route => route.fulfill({ contentType: 'text/html', body: '<html><body>Mapa</body></html>' }));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Abrir invitación', exact: true }).click();
+  const viewport = page.locator('.moments__viewport');
+  const track = page.locator('[data-gallery-track]');
+  await viewport.scrollIntoViewIfNeeded();
+  const keepsMoving = async () => {
+    const before = await track.evaluate(el => getComputedStyle(el).transform);
+    await expect.poll(() => track.evaluate(el => getComputedStyle(el).transform)).not.toBe(before);
+  };
+  const card = page.locator('.moment-card').first();
+  const box = (await card.boundingBox())!;
+  const x = Math.max(20, box.x + box.width / 2);
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await keepsMoving();
+  await viewport.focus();
+  await keepsMoving();
+  if (isMobile) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    await keepsMoving();
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await cdp.detach();
+  } else {
+    await page.mouse.down();
+    await keepsMoving();
+    await page.mouse.up();
+  }
+  await expect(page.getByRole('dialog', { name: 'Vista ampliada de la foto' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await keepsMoving();
+});
+
 test('retains the invitation, opens accessibly, defers audio and supports the gallery', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -24,16 +62,16 @@ test('retains the invitation, opens accessibly, defers audio and supports the ga
   await page.getByRole('button', { name: 'Agendar la fecha' }).click();
   expect((await download).suggestedFilename()).toMatch(/\.ics$/);
   const photo = page.locator('.moment-card').first();
-  await expect(page.locator('.moment-card[tabindex="0"]')).toHaveCount(39);
-  await expect(page.locator('.moment-card[aria-hidden="true"]')).toHaveCount(39);
+  await expect(page.locator('.moment-card[tabindex="0"]')).toHaveCount(gallerySize);
+  await expect(page.locator('.moment-card[aria-hidden="true"]')).toHaveCount(gallerySize);
   await photo.focus(); await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog', { name: 'Vista ampliada de la foto' })).toBeVisible();
   await expect(page.locator('.lightbox img')).toHaveAttribute('src', (await photo.getAttribute('data-full-src'))!);
-  await expect(page.locator('.lightbox p')).toContainText('1 / 39');
+  await expect(page.locator('.lightbox p')).toContainText(`1 / ${gallerySize}`);
   await page.keyboard.press('ArrowLeft');
-  await expect(page.locator('.lightbox p')).toContainText('39 / 39');
+  await expect(page.locator('.lightbox p')).toContainText(`${gallerySize} / ${gallerySize}`);
   await page.keyboard.press('ArrowRight');
-  await expect(page.locator('.lightbox p')).toContainText('1 / 39');
+  await expect(page.locator('.lightbox p')).toContainText(`1 / ${gallerySize}`);
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('Escape');
   await expect(photo).toBeFocused();
   await page.locator('.moments__viewport').scrollIntoViewIfNeeded();

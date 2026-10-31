@@ -1,9 +1,9 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import AdminLayout from '../layouts/AdminLayout.astro';
 import AdminDashboard from '../components/AdminDashboard';
 ---
-<Layout title="Administración — Akion & Mariamalia">
-  <main class="admin-shell"><AdminDashboard client:only="react" />
+<AdminLayout>
+  <div class="admin-shell"><AdminDashboard client:only="react" />
     <noscript>Activa JavaScript para iniciar sesión y administrar las invitaciones.</noscript>
-  </main>
-</Layout>
+  </div>
+</AdminLayout>

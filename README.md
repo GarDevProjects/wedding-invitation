@@ -41,6 +41,7 @@ The public page is static HTML. React hydrates only the RSVP island and the sepa
 - Complete links are shown only when created/rotated and held in page memory. Copy them before reloading. A replacement link revokes the previous token and clears the sent marker.
 - Admins can create/edit, share manually through WhatsApp, mark sent, revoke, archive/restore, search/filter and export the current view.
 - Admins can import up to 200 guests per CSV with preview, validation, duplicate checks and atomic creation, then download the generated links. Testing tools can permanently reset all invitations and responses after typed confirmation. See [the setup and usage guide](ADMIN_CSV_SETUP.md).
+- The admin has a separate white interface, responsive sidebar, RSVP and delivery charts, visible CSV/reset actions and confirmed individual deletion. Individual deletion removes the selected invitation, its RSVP/history and token through a service-only database function.
 - Metrics exclude archived invitations; response rate is responded active invitations / all active invitations. An acceptance always counts as one seat.
 - Realtime changes refresh server-calculated metrics. Thirty-second polling and reconnect/visibility refreshes provide a fallback.
 - Attendance CSV exports omit tokens and neutralize spreadsheet formulas. The separate import-result download includes the newly generated personal links; keep it private. Neither export is a complete database backup.

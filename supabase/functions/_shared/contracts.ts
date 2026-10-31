@@ -21,6 +21,7 @@ export const requestSchema = z.discriminatedUnion('action', [
   guestFields.extend({ action: z.literal('edit'), id: z.uuid() }).strict(),
   z.object({ action: z.literal('rotate'), id: z.uuid() }).strict(),
   z.object({ action: z.literal('revoke'), id: z.uuid() }).strict(),
+  z.object({ action: z.literal('delete'), id: z.uuid() }).strict(),
   z.object({ action: z.literal('archive'), id: z.uuid(), archived: z.boolean() }).strict(),
   z.object({ action: z.literal('sent'), id: z.uuid() }).strict(),
 ]);

@@ -3,7 +3,7 @@ import type { AdminInvitation } from '../../supabase/functions/_shared/contracts
 
 const userId = '00000000-0000-4000-8000-000000000001';
 const token = 'b'.repeat(64);
-test('admin signs in, creates, edits, shares, filters, exports and archives an invitation', async ({ page }) => {
+test('admin signs in, creates, edits, shares, filters, exports and archives an invitation', async ({ page, isMobile }) => {
   const jwt = [Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'), Buffer.from(JSON.stringify({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600, aud: 'authenticated' })).toString('base64url'), 'signature'].join('.');
   await page.route('**/auth/v1/token?**', route => route.fulfill({ json: {
     access_token: jwt, refresh_token: 'refresh-test', token_type: 'bearer', expires_in: 3600,
@@ -59,6 +59,7 @@ test('admin signs in, creates, edits, shares, filters, exports and archives an i
   await expect(page.getByText('No hay invitaciones en esta vista.')).toBeVisible();
   await page.getByLabel('Ver archivadas').check();
   await expect(page.getByRole('button', { name: 'Restaurar', exact: true })).toBeVisible();
+  if (isMobile) await page.getByRole('button', { name: 'Menú', exact: true }).click();
   await page.getByRole('button', { name: 'Cerrar sesión' }).click();
   await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
 });

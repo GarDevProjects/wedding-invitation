@@ -71,6 +71,10 @@ export const handler = async (request: Request) => {
     if (input.action === 'rotate') {
       const { data, error } = await db.rpc('rotate_invitation', { p_id: input.id }); if (error) throw error; return reply(data);
     }
+    if (input.action === 'delete') {
+      const { data, error } = await db.rpc('delete_invitation', { p_id: input.id });
+      if (error) throw error; return reply(data);
+    }
     const changes = input.action === 'edit' ? { full_name: input.full_name, phone: input.phone, expires_at: input.expires_at }
       : input.action === 'archive' ? { archived_at: input.archived ? new Date().toISOString() : null }
       : input.action === 'revoke' ? { revoked: true }

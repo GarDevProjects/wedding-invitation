@@ -5,6 +5,8 @@ import { ApiError, errorMessage } from '../lib/api';
 import { formatDate } from '../lib/dates';
 
 interface Props {
+  activeTab: 'import' | 'reset' | null;
+  links: Record<string, string>;
   defaultDeadline: string;
   busy: boolean;
   setBusy: (value: boolean) => void;
@@ -14,7 +16,7 @@ interface Props {
   onReset: () => void;
 }
 
-export default function AdminBulkTools({ defaultDeadline, busy, setBusy, request, refresh, onImported, onReset }: Props) {
+export default function AdminBulkTools({ activeTab, links, defaultDeadline, busy, setBusy, request, refresh, onImported, onReset }: Props) {
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [batchId, setBatchId] = useState('');
   const [filename, setFilename] = useState('');
@@ -84,9 +86,10 @@ export default function AdminBulkTools({ defaultDeadline, busy, setBusy, request
     } finally { pending.current = false; setBusy(false); }
   };
 
-  return <div className="admin-bulk-tools">
-    <details className="admin-bulk">
-      <summary>Importar invitaciones desde CSV</summary>
+  const downloadable = imported.filter(row => links[row.id]?.endsWith(`/i/${row.token}`));
+  return <div className="admin-bulk-tools" hidden={activeTab === null}>
+    <section className="admin-card admin-bulk" hidden={activeTab !== 'import'} aria-labelledby="import-title">
+      <h2 id="import-title">Carga de invitados</h2>
       <p>Una fila por persona. Máximo {MAX_IMPORT_ROWS} invitados y 128 KB por archivo. Revisa la vista previa antes de crear el lote.</p>
       <p>Columnas: <code>nombre</code>, <code>telefono</code> y <code>fecha_limite</code>. Solo el nombre es obligatorio. La fecha usa <code>AAAA-MM-DD HH:mm</code>, hora de Costa Rica; si queda vacía, se usará {formatDate(defaultDeadline, { dateStyle: 'long', timeStyle: 'medium' })}.</p>
       <button type="button" className="text-link" onClick={() => downloadCsv(importTemplate(), 'plantilla-invitaciones.csv')}>Descargar plantilla CSV</button>
@@ -101,18 +104,18 @@ export default function AdminBulkTools({ defaultDeadline, busy, setBusy, request
         </div>}
       </form>
       <p role="status" aria-live="polite">{importMessage}</p>
-      {imported.length > 0 && <aside className="admin-link"><strong>Enlaces del último lote ({imported.length})</strong><p>Guarda este archivo: los enlaces personales solo están disponibles en esta sesión. Compártelo únicamente con quienes administran las invitaciones.</p><button className="button" type="button" onClick={() => downloadCsv(importedLinksCsv(imported, location.origin), 'enlaces-invitaciones.csv')}>Descargar CSV con enlaces</button></aside>}
-    </details>
-    <details className="admin-bulk admin-reset">
-      <summary>Herramientas de prueba: reiniciar invitaciones</summary>
+      {downloadable.length > 0 && <aside className="admin-link"><strong>Enlaces del último lote ({downloadable.length})</strong><p>Guarda este archivo: los enlaces personales solo están disponibles en esta sesión. Compártelo únicamente con quienes administran las invitaciones.</p><button className="button" type="button" onClick={() => downloadCsv(importedLinksCsv(downloadable, location.origin), 'enlaces-invitaciones.csv')}>Descargar CSV con enlaces</button></aside>}
+    </section>
+    <section className="admin-card admin-bulk admin-reset" hidden={activeTab !== 'reset'} aria-labelledby="reset-title">
+      <h2 id="reset-title">Reiniciar invitaciones</h2>
       <p>Elimina permanentemente <strong>todas las invitaciones, incluidas las archivadas</strong>, sus respuestas y su historial. Todos los enlaces anteriores dejarán de funcionar. Las cuentas de administrador se conservan.</p>
       <p className="fine-print">Este reinicio afecta la base de datos configurada: <strong>{import.meta.env.PUBLIC_SUPABASE_URL}</strong>. También desde localhost se modifican los datos de ese proyecto.</p>
       {!reset ? <button className="button" type="button" disabled={busy} onClick={() => void prepareReset()}>Preparar reinicio</button> : <form className="admin-form" onSubmit={resetGuests}>
         <p><strong>Se eliminarán {reset.count} invitaciones.</strong> Esta acción no se puede deshacer. Descarga antes el reporte si necesitas conservarlo.</p>
         <label>Escribe BORRAR TODO para confirmar<input value={confirmation} autoComplete="off" spellCheck={false} disabled={busy} onChange={event => setConfirmation(event.target.value)} /></label>
-        <div className="flex flex-wrap gap-3"><button className="button button--danger" disabled={busy || !reset.count || confirmation !== RESET_CONFIRMATION}>Eliminar todas las invitaciones</button><button className="button" type="button" disabled={busy} onClick={() => { setReset(null); setConfirmation(''); }}>Cancelar reinicio</button></div>
+        <div className="admin-form-actions"><button className="button button--danger" disabled={busy || !reset.count || confirmation !== RESET_CONFIRMATION}>Eliminar todas las invitaciones</button><button className="button" type="button" disabled={busy} onClick={() => { setReset(null); setConfirmation(''); }}>Cancelar reinicio</button></div>
       </form>}
       <p role="status" aria-live="polite">{resetMessage}</p>
-    </details>
+    </section>
   </div>;
 }

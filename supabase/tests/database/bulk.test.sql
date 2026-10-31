@@ -8,6 +8,8 @@ select ok(not has_function_privilege('authenticated', 'public.reset_invitations(
 select ok(not has_function_privilege('anon', 'public.reset_invitations(text,text)', 'execute'), 'Guests cannot reset');
 select ok(not has_function_privilege('authenticated', 'public.admin_reset_preview()', 'execute'), 'Reset preview is service-only');
 select ok(has_function_privilege('service_role', 'public.reset_invitations(text,text)', 'execute'), 'Service role can execute reset');
+select matches(lower(pg_get_functiondef('public.reset_invitations(text,text)'::regprocedure)), 'delete\s+from\s+public\.invitations\s+where\s+', 'Reset invitation delete has a WHERE clause required by hosted safeupdate');
+select matches(lower(pg_get_functiondef('public.reset_invitations(text,text)'::regprocedure)), 'delete\s+from\s+private\.invitation_imports\s+where\s+', 'Reset receipt delete also has a WHERE clause');
 select ok(not has_table_privilege('authenticated', 'private.invitation_imports', 'select'), 'Import receipts stay private');
 
 create temp table batch as select '00000000-0000-4000-8000-000000000010'::uuid as id,
@@ -55,5 +57,9 @@ select is((select count(*)::integer from public.admin_profiles),1,'Admin members
 select is((select count(*)::integer from auth.users),1,'Auth account retained');
 select is((select count(*)::integer from private.rate_limits),1,'Rate limits retained');
 select is((select public.import_invitations(id,guests)->>'created_count' from batch),'2','Same CSV can be imported after reset');
+select is(public.import_invitations(gen_random_uuid(), (select jsonb_agg(jsonb_build_object('full_name','Invitado prueba ' || n,'phone','','expires_at',now()+interval '10 days')) from generate_series(1,100) as n))->>'created_count','100','Import a full 100-person test file');
+select is(public.reset_invitations('BORRAR TODO',public.admin_reset_preview()->>'version')->>'deleted_count','102','Reset deletes the complete confirmed 102-person test collection');
+select is((select count(*)::integer from private.invitation_credentials),0,'Large reset invalidates all tokens');
+select is((select count(*)::integer from private.invitation_imports),0,'Large reset clears all import receipts');
 select * from finish();
 rollback;

@@ -43,7 +43,7 @@ async function setup(page: Page) {
   await page.getByLabel('Contraseña').fill('test-password');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('button', { name: 'Nueva invitación' }).waitFor();
-  await page.getByText('Importar invitaciones desde CSV', { exact: true }).click();
+  await page.getByRole('button', { name: 'Importar invitaciones desde CSV', exact: true }).click();
   return state;
 }
 
@@ -69,7 +69,7 @@ test('admin validates CSV, imports, downloads links and explicitly resets all in
   const exported = await readFile((await download.path())!, 'utf8');
   expect(exported).toContain(`/i/${'1'.repeat(64)}`);
   expect(exported).toContain('María López');
-  await page.getByText('Herramientas de prueba: reiniciar invitaciones', { exact: true }).click();
+  await page.getByRole('button', { name: 'Reiniciar invitaciones', exact: true }).click();
   await page.getByRole('button', { name: 'Preparar reinicio' }).click();
   await expect(page.getByText('Se eliminarán 3 invitaciones.', { exact: true })).toBeVisible();
   const deleteButton = page.getByRole('button', { name: 'Eliminar todas las invitaciones' });
@@ -90,6 +90,8 @@ test('admin validates CSV, imports, downloads links and explicitly resets all in
   await deleteButton.click();
   await expect(page.getByText('Reinicio completado:', { exact: false })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Descargar CSV con enlaces' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Nueva invitación', exact: true }).click();
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
   await expect(page.getByText('No hay invitaciones en esta vista.')).toBeVisible();
   expect(state.rows).toHaveLength(0); expect(state.resets).toBe(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -99,6 +101,9 @@ test('a lost import response retries with the same batch id without duplicate in
   const state = await setup(page); state.loseResponse = true;
   await page.getByLabel('Archivo CSV').setInputFiles(file(csv));
   const create = page.getByRole('button', { name: 'Crear 2 invitaciones', exact: true });
+  await expect(create).toBeEnabled();
+  await page.screenshot({ path: `.tools/admin-import-preview-${test.info().project.name}.png`, fullPage: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await create.click();
   await expect(page.getByText('Si la conexión se interrumpió', { exact: false })).toBeVisible();
   await create.click();

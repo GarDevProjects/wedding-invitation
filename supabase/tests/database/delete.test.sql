@@ -1,0 +1,24 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select no_plan();
+select ok(not has_function_privilege('anon','public.delete_invitation(uuid)','execute'),'Guest cannot delete invitations');
+select ok(not has_function_privilege('authenticated','public.delete_invitation(uuid)','execute'),'Browser roles cannot delete directly');
+select ok(has_function_privilege('service_role','public.delete_invitation(uuid)','execute'),'Service role can delete after API authorization');
+select matches(lower(pg_get_functiondef('public.delete_invitation(uuid)'::regprocedure)), 'delete\s+from\s+public\.invitations\s+where\s+', 'Individual deletion respects safeupdate');
+create temp table delete_links as select public.create_invitation('Delete This Guest','',now()+interval '10 days') as target,
+  public.create_invitation('Keep This Guest','',now()+interval '10 days') as other;
+select public.submit_rsvp(encode(extensions.digest((select target->>'token' from delete_links),'sha256'),'hex'),'accepted','Test');
+update public.invitations set archived_at=now() where id=(select (target->>'id')::uuid from delete_links);
+select is(public.delete_invitation((select (target->>'id')::uuid from delete_links))->>'deleted_count','1','An archived individual invitation can be deleted');
+select is((select count(*)::integer from public.invitations),1,'Only the selected invitation is deleted');
+select is((select count(*)::integer from public.rsvps),1,'Selected RSVP cascades but other response remains');
+select is((select count(*)::integer from public.rsvp_events),0,'Selected RSVP history is removed');
+select is((select count(*)::integer from private.invitation_credentials),1,'Only the selected token hash is removed');
+select ok(public.resolve_invitation(encode(extensions.digest((select target->>'token' from delete_links),'sha256'),'hex')) is null,'Deleted link no longer resolves');
+select is(public.resolve_invitation(encode(extensions.digest((select other->>'token' from delete_links),'sha256'),'hex'))->>'full_name','Keep This Guest','Other invitation still resolves');
+select throws_ok($$select public.delete_invitation((select (target->>'id')::uuid from delete_links))$$,'P0001','NOT_FOUND','Retry does not delete a different guest');
+select throws_ok($$select public.delete_invitation(null)$$,'P0001','INVALID_INPUT','Null target rejected');
+select is((select count(*)::integer from public.invitations),1,'Other invitation survives invalid requests');
+select * from finish();
+rollback;

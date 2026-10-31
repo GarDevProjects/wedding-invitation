@@ -1,5 +1,10 @@
 import type { ImageMetadata } from 'astro';
-import hero from '../assets/photos/hero.jpg';
+import galleryPhotoTwo from '../assets/photos/hero.jpg';
+import inicio from '../assets/photos/secciones/01-inicio.jpg';
+import reservaFecha from '../assets/photos/secciones/02-reserva-fecha.jpg';
+import dressCode from '../assets/photos/secciones/03-dress-code.jpg';
+import regalos from '../assets/photos/secciones/04-regalos.jpg';
+import confirmarAsistencia from '../assets/photos/secciones/05-confirmar-asistencia.jpg';
 
 // Only numbered personal photos are included; legacy photo-*.jpg and hero2.jpg are excluded.
 const files = import.meta.glob<{ default: ImageMetadata }>('../assets/photos/[0-9]*.jpg', { eager: true });
@@ -48,13 +53,9 @@ const descriptions: Record<number, { alt: string; caption: string }> = {
 const numbered = Object.entries(files)
   .map(([path, image]) => ({ number: Number(path.match(/\/(\d+)\.jpg$/)![1]), src: image.default }))
   .sort((a, b) => a.number - b.number);
-const sectionPhoto = (number: number) => {
-  const photo = numbered.find(photo => photo.number === number);
-  if (!photo) throw new Error(`Missing section photo: src/assets/photos/${number}.jpg`);
-  return photo.src;
-};
-
-export const images = { hero, date: sectionPhoto(1), dressCode: sectionPhoto(32), gifts: sectionPhoto(38), rsvp: sectionPhoto(19) };
+// Replace these five named files independently of the numbered carousel collection.
+export const images = { hero: inicio, date: reservaFecha, dressCode, gifts: regalos, rsvp: confirmarAsistencia };
+// Update the descriptions when choosing different photos for the sections.
 export const imageAlt = {
   hero: 'Detalle de las manos y el anillo de Mariamalia durante un abrazo con Akion',
   date: descriptions[1].alt,
@@ -67,4 +68,4 @@ export const gallery = numbered.map(photo => ({
   ...(descriptions[photo.number] ?? { alt: `Akion y Mariamalia, momento ${photo.number}`, caption: `Un recuerdo juntos · ${photo.number}` }),
 }));
 // Photo 2 was intentionally named hero.jpg; keep it in its numeric place in the gallery.
-gallery.splice(1, 0, { src: hero, alt: imageAlt.hero, caption: 'Nuestro para siempre' });
+gallery.splice(1, 0, { src: galleryPhotoTwo, alt: 'Detalle de las manos y el anillo de Mariamalia durante un abrazo con Akion', caption: 'Nuestro para siempre' });

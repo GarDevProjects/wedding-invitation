@@ -26,6 +26,7 @@ Deno.test('API validates origin, token, Auth identity and administrator membersh
     if (url.includes('/rpc/admin_reset_preview')) return Response.json({ count: 1, version: token });
     if (url.includes('/rpc/reset_invitations')) return Response.json({ deleted_count: 1 });
     if (url.includes('/rpc/delete_invitation')) return Response.json({ id: '00000000-0000-4000-8000-000000000001', deleted_count: 1 });
+    if (/\/rpc\/(create_seating_table|edit_seating_table|delete_seating_table|assign_seating_guests)/.test(url)) return Response.json({ id: '00000000-0000-4000-8000-000000000001' });
     throw new Error('Unexpected network call: ' + url);
   };
   const request = (body: unknown, jwt?: string, origin = 'https://wedding.example') => handler(new Request('https://test-project.supabase.co/functions/v1/wedding-api', {
@@ -67,15 +68,19 @@ Deno.test('API validates origin, token, Auth identity and administrator membersh
         { action: 'reset_preview' },
         { action: 'delete', id: '00000000-0000-4000-8000-000000000001' },
         { action: 'reset', confirmation: 'BORRAR TODO', version: token },
+        { action: 'seating_create', name: 'Mesa 1', capacity: 8 },
+        { action: 'seating_edit', id: '00000000-0000-4000-8000-000000000001', name: 'Mesa 1', capacity: 10 },
+        { action: 'seating_delete', id: '00000000-0000-4000-8000-000000000001' },
+        { action: 'seating_assign', table_id: null, invitation_ids: ['00000000-0000-4000-8000-000000000001'] },
       ];
       for (const action of actions) {
         assert.equal((await request(action)).status, 401);
         admin = false;
         const start = calls.length;
         assert.equal((await request(action, 'valid-jwt')).status, 403);
-        assert.ok(!calls.slice(start).some(url => /rpc\/(import_invitations|reset_invitations|admin_reset_preview|delete_invitation)/.test(url)));
+        assert.ok(!calls.slice(start).some(url => /rpc\/(import_invitations|reset_invitations|admin_reset_preview|delete_invitation|create_seating_table|edit_seating_table|delete_seating_table|assign_seating_guests)/.test(url)));
         admin = true;
-        assert.equal((await request(action, 'valid-jwt')).status, action.action === 'import' ? 201 : 200);
+        assert.equal((await request(action, 'valid-jwt')).status, action.action === 'import' || action.action === 'seating_create' ? 201 : 200);
       }
     });
     await t.step('reset without exact confirmation and imports with forged fields are rejected', async () => {

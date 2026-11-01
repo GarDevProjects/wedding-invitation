@@ -23,6 +23,10 @@ export function invitationToken(pathname: string): string | null {
 }
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === 'TABLE_FULL') return 'La mesa no tiene suficientes plazas. Actualiza la lista y elige otra mesa o amplía su capacidad.';
+    if (error.code === 'TABLE_NAME_EXISTS') return 'Ya existe una mesa con ese nombre. Elige otro nombre.';
+    if (error.code === 'TABLE_CAPACITY_TOO_SMALL') return 'La capacidad es menor que las personas asignadas. Primero quita o mueve invitados.';
+    if (error.code === 'INVITATION_UNAVAILABLE') return 'Una de las personas fue archivada o indicó que no asistirá. Actualiza la lista y revisa la selección.';
     if (error.code === 'NOT_FOUND') return 'Esta invitación ya no existe. Actualiza la lista para ver los cambios.';
     if (error.code === 'DUPLICATE_GUEST') return 'No se importó el lote: ya existe una invitación con el mismo nombre y teléfono (incluidas las archivadas). Revisa la lista y elimina esa fila del CSV.';
     if (error.code === 'BATCH_CONFLICT') return 'El lote cambió. Selecciona de nuevo el archivo y revisa la vista previa.';

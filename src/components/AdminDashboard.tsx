@@ -8,10 +8,11 @@ import { filterInvitations, fromCostaRicaInput, invitationsCsv, statusLabels, to
 import { guestFields, type AdminInvitation, type AdminSnapshot, type ApiRequest } from '../../supabase/functions/_shared/contracts';
 import AdminBulkTools from './AdminBulkTools';
 import AdminOverview from './AdminOverview';
+import AdminSeating from './AdminSeating';
 import AdminIcon from './AdminIcon';
 import { downloadCsv } from '../lib/import-invitations';
 
-type AdminView = 'overview' | 'guests' | 'import' | 'reset';
+type AdminView = 'overview' | 'guests' | 'tables' | 'import' | 'reset';
 
 export default function AdminDashboard() {
   const [session, setSession] = useState<Session | null>(null);
@@ -79,6 +80,8 @@ export default function AdminDashboard() {
       channel = supabase!.channel(`admin-${userId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'invitations' }, changed)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'rsvps' }, changed)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'seating_tables' }, changed)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'seating_assignments' }, changed)
         .subscribe(status => {
           if (!active) return;
           setConnection(status === 'SUBSCRIBED' ? 'En vivo' : 'Reconectando · actualización cada 30 segundos');
@@ -123,7 +126,7 @@ export default function AdminDashboard() {
           const invitations = previous.invitations.filter(row => row.id !== request.id);
           const active = invitations.filter(row => !row.archived_at);
           const count = (status: string) => active.filter(row => row.status === status).length;
-          return { invitations, fetched_at: new Date().toISOString(), metrics: {
+          return { invitations, fetched_at: new Date().toISOString(), seating: previous.seating ? { ...previous.seating, assignments: previous.seating.assignments.filter(assignment => assignment.invitation_id !== request.id) } : undefined, metrics: {
             total: active.length, sent: active.filter(row => row.sent_at).length,
             accepted: count('accepted'), declined: count('declined'), pending: count('pending'),
             response_rate: active.length ? Math.round((count('accepted') + count('declined')) / active.length * 1000) / 10 : 0,
@@ -165,9 +168,11 @@ export default function AdminDashboard() {
     <p className="admin-notice" role="status">{message}</p><a href="/">Volver a la invitación</a></div></main>;
   const rows = filterInvitations(snapshot?.invitations ?? [], search, filter, archived);
   const metrics = snapshot?.metrics;
+  const tableNames = new Map(snapshot?.seating?.tables.map(table => [table.id, table.name]));
+  const guestTables = new Map(snapshot?.seating?.assignments.map(assignment => [assignment.invitation_id, tableNames.get(assignment.table_id)]));
   const navigate = (next: AdminView) => { setView(next); setMenuOpen(false); };
   const showFilter = (next: string) => { setFilter(next); setArchived(false); setSearch(''); navigate('guests'); };
-  const headings = { overview: ['Resumen', 'Una vista general de tus invitaciones y respuestas.'], guests: ['Lista de invitados', 'Organiza tus invitados y administra cada invitación.'], import: ['Importar invitaciones desde CSV', 'Carga varios invitados y genera sus enlaces en un solo paso.'], reset: ['Herramientas de prueba', 'Reinicia las invitaciones cuando necesites comenzar de cero.'] };
+  const headings = { overview: ['Resumen', 'Una vista general de tus invitaciones y respuestas.'], guests: ['Lista de invitados', 'Organiza tus invitados y administra cada invitación.'], tables: ['Mesas', 'Define capacidades, asigna invitados y revisa sus confirmaciones.'], import: ['Importar invitaciones desde CSV', 'Carga varios invitados y genera sus enlaces en un solo paso.'], reset: ['Herramientas de prueba', 'Reinicia las invitaciones cuando necesites comenzar de cero.'] };
   return <div className="admin-app">
     <a href="#admin-main" className="admin-skip">Saltar al contenido</a>
     {menuOpen && <button className="admin-menu-backdrop" aria-label="Cerrar menú lateral" onClick={() => setMenuOpen(false)} />}
@@ -176,7 +181,7 @@ export default function AdminDashboard() {
       <div className="admin-event"><span>EVENTO</span><strong>Akion & Mariamalia</strong><small>29 de enero de 2027</small></div>
       <nav aria-label="Navegación de administración">
         {([
-          ['overview', 'Resumen', 'overview'], ['guests', 'Invitados', 'guests'], ['import', 'Importar CSV', 'import'], ['reset', 'Herramientas de prueba', 'reset'],
+          ['overview', 'Resumen', 'overview'], ['guests', 'Invitados', 'guests'], ['tables', 'Mesas', 'tables'], ['import', 'Importar CSV', 'import'], ['reset', 'Herramientas de prueba', 'reset'],
         ] as const).map(([target,label,icon]) => <button key={target} aria-current={view === target ? 'page' : undefined} onClick={() => navigate(target)}><AdminIcon name={icon} /><span>{label}</span>{target === 'guests' && metrics && <small>{metrics.total}</small>}</button>)}
       </nav>
       <a className="admin-public-link" href="/" target="_blank" rel="noopener noreferrer"><AdminIcon name="external" /> Ver invitación pública</a>
@@ -190,11 +195,12 @@ export default function AdminDashboard() {
         {message && <p className="admin-notice" role="status" aria-live="polite">{message}</p>}
         {!snapshot ? <section className="admin-card admin-empty"><p>{message ? 'No se pudo cargar la lista de invitados.' : 'Verificando acceso y cargando invitaciones…'}</p><button className="button" onClick={() => void refresh()}>Reintentar</button></section> : <>
           {view === 'overview' && <AdminOverview snapshot={snapshot} onFilter={showFilter} />}
+          <AdminSeating active={view === 'tables'} snapshot={snapshot} busy={busy} setBusy={setBusy} request={authorizedRequest} refresh={refresh} />
           <AdminBulkTools key={userId} activeTab={view === 'import' ? 'import' : view === 'reset' ? 'reset' : null} links={links} defaultDeadline={wedding.rsvpDeadline} busy={busy} setBusy={setBusy} request={authorizedRequest} refresh={refresh}
             onImported={items => setLinks(previous => ({ ...previous, ...Object.fromEntries(items.map(item => [item.id, `${location.origin}/i/${item.token}`])) }))}
             onReset={() => {
               setLinks({}); setLatestLink(null); setEditing(null); setFormVisible(false); setSearch(''); setFilter('all'); setArchived(false); setMessage('');
-              setSnapshot(previous => previous && { invitations: [], metrics: { total: 0, sent: 0, pending: 0, accepted: 0, declined: 0, response_rate: 0 }, fetched_at: new Date().toISOString() });
+              setSnapshot(previous => previous && { invitations: [], metrics: { total: 0, sent: 0, pending: 0, accepted: 0, declined: 0, response_rate: 0 }, fetched_at: new Date().toISOString(), seating: previous.seating ? { tables: previous.seating.tables, assignments: [] } : undefined });
             }} />
           {view === 'guests' && <>
             {latestLink && <aside className="admin-link"><strong>Guarda este enlace personal</strong><p>El enlace completo solo está disponible durante esta sesión. Si lo pierdes, genera uno nuevo y comparte el enlace actualizado.</p><div className="admin-link-copy"><input aria-label="Enlace personal recién generado" readOnly value={latestLink.url} onFocus={event => event.target.select()} /><button className="button" onClick={() => void copy(latestLink.url)}>Copiar enlace</button></div></aside>}
@@ -202,9 +208,10 @@ export default function AdminDashboard() {
             <section className="admin-card admin-guest-list" aria-label="Gestión de invitados">
               <div className="admin-list-heading"><div><h2>Invitaciones {archived ? 'archivadas' : 'activas'}</h2><p>{rows.length} invitaciones en esta vista</p></div><button className="button" onClick={() => downloadCsv(invitationsCsv(rows), 'invitaciones.csv')}>Exportar vista CSV ({rows.length})</button></div>
               <div className="admin-filters"><label>Buscar por nombre<input type="search" placeholder="Buscar un invitado…" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Estado<select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">Todos</option><option value="pending">Pendientes</option><option value="accepted">Confirmados</option><option value="declined">No asistirán</option><option value="not_sent">Sin enviar</option></select></label><label className="admin-check"><input type="checkbox" checked={archived} onChange={event => setArchived(event.target.checked)} /> Ver archivadas</label></div>
-              <div className="admin-table-wrap"><table className="admin-table"><caption className="sr-only">Invitaciones y respuestas</caption><thead><tr><th>Invitado</th><th>Respuesta</th><th>Envío</th><th>Fecha límite</th><th>Acciones</th></tr></thead><tbody>{rows.map(row => <tr key={row.id}>
+              <div className="admin-table-wrap"><table className="admin-table"><caption className="sr-only">Invitaciones y respuestas</caption><thead><tr><th>Invitado</th><th>Respuesta</th><th>Mesa</th><th>Envío</th><th>Fecha límite</th><th>Acciones</th></tr></thead><tbody>{rows.map(row => <tr key={row.id}>
                 <td><strong>{row.full_name}</strong>{row.phone && <small>{row.phone}</small>}{row.notes && <p className="admin-note">{row.notes}</p>}{row.revoked && <small className="admin-danger-text">Enlace revocado</small>}</td>
                 <td><span className={`status-badge status-badge--${row.status}`}>{statusLabels[row.status]}</span>{row.responded_at && <small>{formatDate(row.updated_at, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</small>}</td>
+                <td>{row.archived_at ? '—' : guestTables.get(row.id) ?? 'Sin mesa'}</td>
                 <td><span className={`admin-send-status${row.sent_at ? ' is-sent' : ''}`}>{row.sent_at ? 'Enviada' : 'Sin enviar'}</span>{row.sent_at && <small>{formatDate(row.sent_at, { day: 'numeric', month: 'short' })}</small>}</td>
                 <td>{formatDate(row.expires_at, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                 <td><div className="admin-actions"><button disabled={busy} onClick={() => edit(row)}>Editar</button>

@@ -75,6 +75,20 @@ export const handler = async (request: Request) => {
       const { data, error } = await db.rpc('delete_invitation', { p_id: input.id });
       if (error) throw error; return reply(data);
     }
+    if (input.action === 'seating_create' || input.action === 'seating_edit') {
+      const result = input.action === 'seating_create'
+        ? await db.rpc('create_seating_table', { p_name: input.name, p_capacity: input.capacity })
+        : await db.rpc('edit_seating_table', { p_id: input.id, p_name: input.name, p_capacity: input.capacity });
+      if (result.error) throw result.error; return reply(result.data, input.action === 'seating_create' ? 201 : 200);
+    }
+    if (input.action === 'seating_delete') {
+      const { data, error } = await db.rpc('delete_seating_table', { p_id: input.id });
+      if (error) throw error; return reply(data);
+    }
+    if (input.action === 'seating_assign') {
+      const { data, error } = await db.rpc('assign_seating_guests', { p_table_id: input.table_id, p_invitation_ids: input.invitation_ids });
+      if (error) throw error; return reply(data);
+    }
     const changes = input.action === 'edit' ? { full_name: input.full_name, phone: input.phone, expires_at: input.expires_at }
       : input.action === 'archive' ? { archived_at: input.archived ? new Date().toISOString() : null }
       : input.action === 'revoke' ? { revoked: true }
@@ -87,7 +101,7 @@ export const handler = async (request: Request) => {
     if (error instanceof HttpError) return reply({ error: error.code }, error.status);
     // SQL errors may contain private data. Return only a fixed allowlist; never log bodies or tokens.
     const message = error && typeof error === 'object' && 'message' in error ? String(error.message) : '';
-    const status: Record<string, number> = { INVALID_LINK: 404, DEADLINE_PASSED: 409, INVALID_INPUT: 400, INVALID_DEADLINE: 400, NOT_FOUND: 404, DUPLICATE_GUEST: 409, BATCH_CONFLICT: 409, RESET_CHANGED: 409 };
+    const status: Record<string, number> = { INVALID_LINK: 404, DEADLINE_PASSED: 409, INVALID_INPUT: 400, INVALID_DEADLINE: 400, NOT_FOUND: 404, DUPLICATE_GUEST: 409, BATCH_CONFLICT: 409, RESET_CHANGED: 409, TABLE_FULL: 409, TABLE_NAME_EXISTS: 409, TABLE_CAPACITY_TOO_SMALL: 409, INVITATION_UNAVAILABLE: 409 };
     if (message in status) return reply({ error: message }, status[message]);
     return reply({ error: 'UNAVAILABLE' }, 503);
   }

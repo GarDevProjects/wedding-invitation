@@ -23,6 +23,7 @@ export function invitationToken(pathname: string): string | null {
 }
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === 'INVITATION_ARCHIVED') return 'Esta invitación está archivada. Restáurala antes de registrar su respuesta.';
     if (error.code === 'TABLE_FULL') return 'La mesa no tiene suficientes plazas. Actualiza la lista y elige otra mesa o amplía su capacidad.';
     if (error.code === 'TABLE_NAME_EXISTS') return 'Ya existe una mesa con ese nombre. Elige otro nombre.';
     if (error.code === 'TABLE_CAPACITY_TOO_SMALL') return 'La capacidad es menor que las personas asignadas. Primero quita o mueve invitados.';

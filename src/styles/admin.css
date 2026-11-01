@@ -145,11 +145,20 @@ code { font-size: .85em; padding: .15rem .3rem; background: #f1f5f9; border-radi
 .admin-table strong { font-weight: 500; }
 .admin-table small { display: block; margin-top: .3rem; font-size: .65rem; color: var(--admin-muted); }
 .admin-note { max-width: 20rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .7rem; color: var(--admin-muted); margin: .4rem 0 0; }
-.admin-actions { display: flex; gap: .4rem .75rem; flex-wrap: wrap; min-width: 18rem; max-width: 23rem; }
-.admin-actions button, .admin-actions a { display: inline-flex; align-items: center; gap: .25rem; padding: .15rem 0; border: 0; background: none; color: #2563eb; font-size: .7rem; }
-.admin-actions button:hover { text-decoration: underline; }
+.admin-actions { display: flex; flex-direction: column; gap: .6rem; min-width: 20rem; max-width: 23rem; }
+.admin-actions-main, .admin-actions-secondary { display: flex; flex-wrap: wrap; gap: .4rem; }
+.admin-actions-secondary { border-top: 1px solid #f1f5f9; padding-top: .6rem; }
+.admin-actions button, .admin-actions a { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; padding: .35rem .55rem; min-height: 32px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; color: #475569; font-size: .68rem; font-weight: 500; text-decoration: none; }
+.admin-actions button:hover:not(:disabled), .admin-actions a:hover { background: #f8fafc; border-color: #94a3b8; text-decoration: none; }
+.admin-actions [aria-hidden=true] { font-size: .85rem; line-height: 1; }
+.admin-actions .admin-confirm-button { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.admin-actions .admin-whatsapp { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
 .admin-actions svg { width: 13px; height: 13px; }
-.admin-actions .admin-delete-button { color: #dc2626; }
+.admin-actions .admin-delete-button { color: #b91c1c; border-color: #fecaca; }
+.admin-manual-options { border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; display: grid; gap: .9rem; }
+.admin-manual-options legend { color: #475569; font-size: .75rem; padding: 0 .3rem; }
+.admin-manual-options label { display: flex; align-items: center; gap: .6rem; font-size: .85rem; cursor: pointer; }
+.admin-manual-options input { accent-color: #2563eb; width: 16px; height: 16px; }
 .status-badge { display: inline-flex; align-items: center; padding: .2rem .55rem; border-radius: 6px; font-size: .65rem; font-weight: 500; white-space: nowrap; }
 .status-badge--pending { color: #92400e; background: #fffbeb; }.status-badge--accepted { color: #166534; background: #f0fdf4; }.status-badge--declined { color: #991b1b; background: #fef2f2; }
 .admin-send-status { color: #94a3b8; font-size: .7rem; white-space: nowrap; }.admin-send-status.is-sent { color: #334155; }

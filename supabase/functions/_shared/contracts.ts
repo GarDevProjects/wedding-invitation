@@ -25,6 +25,7 @@ export const requestSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('delete'), id: z.uuid() }).strict(),
   z.object({ action: z.literal('archive'), id: z.uuid(), archived: z.boolean() }).strict(),
   z.object({ action: z.literal('sent'), id: z.uuid() }).strict(),
+  z.object({ action: z.literal('admin_respond'), id: z.uuid(), status: z.enum(['accepted', 'declined']) }).strict(),
   seatingTableFields.extend({ action: z.literal('seating_create') }).strict(),
   seatingTableFields.extend({ action: z.literal('seating_edit'), id: z.uuid() }).strict(),
   z.object({ action: z.literal('seating_delete'), id: z.uuid() }).strict(),

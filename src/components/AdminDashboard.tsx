@@ -30,11 +30,16 @@ export default function AdminDashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState<AdminInvitation | null>(null);
   const deleteDialog = useRef<HTMLDialogElement>(null);
+  const [responding, setResponding] = useState<AdminInvitation | null>(null);
+  const [manualStatus, setManualStatus] = useState<'accepted' | 'declined'>('accepted');
+  const responseDialog = useRef<HTMLDialogElement>(null);
+  const responseTrigger = useRef<HTMLButtonElement | null>(null);
   const [links, setLinks] = useState<Record<string, string>>({});
   const [latestLink, setLatestLink] = useState<{ id: string; url: string } | null>(null);
   const requestNumber = useRef(0);
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => { if (deleting) deleteDialog.current?.showModal(); else deleteDialog.current?.close(); }, [deleting]);
+  useEffect(() => { if (responding) responseDialog.current?.showModal(); else responseDialog.current?.close(); }, [responding]);
   useEffect(() => {
     const closeMenu = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuOpen(false); };
     document.addEventListener('keydown', closeMenu);
@@ -69,7 +74,7 @@ export default function AdminDashboard() {
   }, [authorizedRequest]);
   const userId = session?.user.id;
   useEffect(() => {
-    setSnapshot(null); setLinks({}); setLatestLink(null); setMessage(''); setDeleting(null); setView('overview'); setMenuOpen(false);
+    setSnapshot(null); setLinks({}); setLatestLink(null); setMessage(''); setDeleting(null); setResponding(null); setView('overview'); setMenuOpen(false);
     if (!userId || !supabase) return;
     let active = true;
     let channel: ReturnType<typeof supabase.channel> | undefined;
@@ -214,14 +219,21 @@ export default function AdminDashboard() {
                 <td>{row.archived_at ? '—' : guestTables.get(row.id) ?? 'Sin mesa'}</td>
                 <td><span className={`admin-send-status${row.sent_at ? ' is-sent' : ''}`}>{row.sent_at ? 'Enviada' : 'Sin enviar'}</span>{row.sent_at && <small>{formatDate(row.sent_at, { day: 'numeric', month: 'short' })}</small>}</td>
                 <td>{formatDate(row.expires_at, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                <td><div className="admin-actions"><button disabled={busy} onClick={() => edit(row)}>Editar</button>
-                  {!row.archived_at && <>
-                    {links[row.id] && !row.revoked ? <><button disabled={busy} onClick={() => void copy(links[row.id])}>Copiar</button><a target="_blank" rel="noopener noreferrer" href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${row.full_name}, queremos celebrar contigo. Tu invitación personal: ${links[row.id]}`)}`}>WhatsApp ↗</a></> : <button disabled={busy} onClick={() => { if (confirm(`¿Generar un enlace nuevo para ${row.full_name}? El enlace anterior dejará de funcionar. Deberás reenviarlo.`)) void mutate({ action: 'rotate', id: row.id }, 'Enlace renovado. Recuerda compartir el nuevo enlace.'); }}>Generar enlace nuevo</button>}
-                    {!row.sent_at && <button disabled={busy || row.revoked} onClick={() => void mutate({ action: 'sent', id: row.id }, 'Marcada como enviada.')}>Marcar enviada</button>}
-                    {!row.revoked && <button disabled={busy} onClick={() => { if (confirm(`¿Revocar el enlace de ${row.full_name}?`)) void mutate({ action: 'revoke', id: row.id }, 'Enlace revocado.'); }}>Revocar</button>}
-                  </>}
-                  <button disabled={busy} onClick={() => { if (confirm(row.archived_at ? '¿Restaurar esta invitación?' : '¿Archivar esta invitación? Su enlace quedará inactivo y saldrá de los totales.')) void mutate({ action: 'archive', id: row.id, archived: !row.archived_at }, row.archived_at ? 'Invitación restaurada.' : 'Invitación archivada.'); }}>{row.archived_at ? 'Restaurar' : 'Archivar'}</button>
-                  <button className="admin-delete-button" disabled={busy} onClick={() => { setMessage(''); setDeleting(row); }}><AdminIcon name="trash" /> Eliminar</button>
+                <td><div className="admin-actions">
+                  <div className="admin-actions-main"><button disabled={busy} onClick={() => edit(row)}><span aria-hidden="true">✏️</span>Editar</button>
+                    {!row.archived_at && <>
+                      <button className="admin-confirm-button" disabled={busy} onClick={event => { responseTrigger.current = event.currentTarget; setMessage(''); setManualStatus(row.status === 'declined' ? 'declined' : 'accepted'); setResponding(row); }}><span aria-hidden="true">{row.status === 'pending' ? '✅' : '📝'}</span>{row.status === 'pending' ? 'Confirmar manualmente' : 'Cambiar respuesta'}</button>
+                      {links[row.id] && !row.revoked ? <><button disabled={busy} onClick={() => void copy(links[row.id])}><span aria-hidden="true">🔗</span>Copiar</button>{row.phone.replace(/\D/g, '').length >= 8 && <a className="admin-whatsapp" target="_blank" rel="noopener noreferrer" href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${row.full_name}, queremos celebrar contigo. Tu invitación personal: ${links[row.id]}`)}`}><span aria-hidden="true">💬</span>WhatsApp</a>}</> : <button disabled={busy} onClick={() => { if (confirm(`¿Generar un enlace nuevo para ${row.full_name}? El enlace anterior dejará de funcionar. Deberás reenviarlo.`)) void mutate({ action: 'rotate', id: row.id }, 'Enlace renovado. Recuerda compartir el nuevo enlace.'); }}><span aria-hidden="true">🔄</span>Generar enlace nuevo</button>}
+                    </>}
+                  </div>
+                  <div className="admin-actions-secondary">
+                    {!row.archived_at && <>
+                      {!row.sent_at && <button disabled={busy || row.revoked} onClick={() => void mutate({ action: 'sent', id: row.id }, 'Marcada como enviada.')}><span aria-hidden="true">📨</span>Marcar enviada</button>}
+                      {!row.revoked && <button disabled={busy} onClick={() => { if (confirm(`¿Revocar el enlace de ${row.full_name}?`)) void mutate({ action: 'revoke', id: row.id }, 'Enlace revocado.'); }}><span aria-hidden="true">🚫</span>Revocar</button>}
+                    </>}
+                    <button disabled={busy} onClick={() => { if (confirm(row.archived_at ? '¿Restaurar esta invitación?' : '¿Archivar esta invitación? Su enlace quedará inactivo y saldrá de los totales.')) void mutate({ action: 'archive', id: row.id, archived: !row.archived_at }, row.archived_at ? 'Invitación restaurada.' : 'Invitación archivada.'); }}><span aria-hidden="true">{row.archived_at ? '♻️' : '📦'}</span>{row.archived_at ? 'Restaurar' : 'Archivar'}</button>
+                    <button className="admin-delete-button" disabled={busy} onClick={() => { setMessage(''); setDeleting(row); }}><span aria-hidden="true">🗑️</span>Eliminar</button>
+                  </div>
                 </div></td>
               </tr>)}</tbody></table>{!rows.length && <div className="admin-empty"><AdminIcon name="guests" /><strong>No hay invitaciones en esta vista.</strong><p>{search || filter !== 'all' ? 'Prueba con otro nombre o cambia los filtros.' : archived ? 'Las invitaciones que archives aparecerán aquí.' : 'Crea una invitación o importa tus invitados desde un CSV.'}</p></div>}</div>
             </section>
@@ -229,6 +241,21 @@ export default function AdminDashboard() {
         </>}
       </div>
     </main>
+    <dialog className="admin-dialog" ref={responseDialog} aria-labelledby="manual-response-title" onCancel={event => { if (busy) event.preventDefault(); }} onClose={() => {
+      setResponding(null);
+      requestAnimationFrame(() => {
+        const target = responseTrigger.current?.isConnected ? responseTrigger.current : document.querySelector<HTMLInputElement>('.admin-filters input[type=search]');
+        target?.focus({ preventScroll: true });
+      });
+    }}>
+      {responding && <form onSubmit={async event => {
+        event.preventDefault(); if (busy) return;
+        if (await mutate({ action: 'admin_respond', id: responding.id, status: manualStatus }, manualStatus === 'accepted' ? 'Asistencia confirmada manualmente.' : 'Respuesta registrada manualmente: no asistirá.')) setResponding(null);
+      }}><h2 id="manual-response-title">Registrar respuesta manual</h2><p>Registra la respuesta de <strong>{responding.full_name}</strong> si te confirmó en persona o por otro medio.</p><p className="fine-print">Como administrador puedes registrar la respuesta incluso después de la fecha límite.</p>
+        <fieldset className="admin-manual-options" disabled={busy}><legend>Respuesta recibida</legend><label><input type="radio" name="manual-response" value="accepted" checked={manualStatus === 'accepted'} onChange={() => setManualStatus('accepted')} /><span aria-hidden="true">✅</span>Sí, asistirá</label><label><input type="radio" name="manual-response" value="declined" checked={manualStatus === 'declined'} onChange={() => setManualStatus('declined')} /><span aria-hidden="true">❌</span>No asistirá</label></fieldset>
+        {message && <p className="admin-danger-text" role="alert">{message}</p>}<div className="admin-dialog-actions"><button className="button" type="button" disabled={busy} onClick={() => setResponding(null)}>Cancelar</button><button className="button button--dark" disabled={busy}>{busy ? 'Guardando…' : 'Guardar respuesta'}</button></div>
+      </form>}
+    </dialog>
     <dialog className="admin-dialog" ref={deleteDialog} aria-labelledby="delete-title" onCancel={event => { if (busy) event.preventDefault(); }} onClose={() => setDeleting(null)}>
       {deleting && <><div className="admin-dialog-icon"><AdminIcon name="trash" /></div><h2 id="delete-title">¿Eliminar esta invitación?</h2><p>Se eliminará permanentemente la invitación de <strong>{deleting.full_name}</strong>, su respuesta y su historial. Su enlace dejará de funcionar.</p><p className="fine-print">Esta acción no se puede deshacer. Si solo deseas ocultarla, puedes archivarla.</p>{message && <p role="alert" className="admin-danger-text">{message}</p>}<div className="admin-dialog-actions"><button className="button" disabled={busy} onClick={() => setDeleting(null)}>Cancelar</button><button className="button button--danger" disabled={busy} onClick={async () => { if (await mutate({ action: 'delete', id: deleting.id }, 'Invitación eliminada permanentemente.')) setDeleting(null); }}>{busy ? 'Eliminando…' : 'Eliminar invitación'}</button></div></>}
     </dialog>

@@ -26,6 +26,11 @@ Deno.test('API validates origin, token, Auth identity and administrator membersh
     if (url.includes('/rpc/admin_reset_preview')) return Response.json({ count: 1, version: token });
     if (url.includes('/rpc/reset_invitations')) return Response.json({ deleted_count: 1 });
     if (url.includes('/rpc/delete_invitation')) return Response.json({ id: '00000000-0000-4000-8000-000000000001', deleted_count: 1 });
+    if (url.includes('/rpc/admin_set_rsvp')) {
+      const body=JSON.parse(String(_init?.body));
+      assert.equal(body.p_actor,'00000000-0000-4000-8000-000000000001');
+      return Response.json({id:body.p_id,status:body.p_status});
+    }
     if (/\/rpc\/(create_seating_table|edit_seating_table|delete_seating_table|assign_seating_guests)/.test(url)) return Response.json({ id: '00000000-0000-4000-8000-000000000001' });
     throw new Error('Unexpected network call: ' + url);
   };
@@ -66,6 +71,7 @@ Deno.test('API validates origin, token, Auth identity and administrator membersh
       const actions = [
         { action: 'import', batch_id: '00000000-0000-4000-8000-000000000010', guests: [{ full_name: 'Ana López', phone: '', expires_at: '2027-01-01T23:59:59-06:00' }] },
         { action: 'reset_preview' },
+        { action: 'admin_respond', id: '00000000-0000-4000-8000-000000000001', status: 'accepted' },
         { action: 'delete', id: '00000000-0000-4000-8000-000000000001' },
         { action: 'reset', confirmation: 'BORRAR TODO', version: token },
         { action: 'seating_create', name: 'Mesa 1', capacity: 8 },
@@ -78,12 +84,13 @@ Deno.test('API validates origin, token, Auth identity and administrator membersh
         admin = false;
         const start = calls.length;
         assert.equal((await request(action, 'valid-jwt')).status, 403);
-        assert.ok(!calls.slice(start).some(url => /rpc\/(import_invitations|reset_invitations|admin_reset_preview|delete_invitation|create_seating_table|edit_seating_table|delete_seating_table|assign_seating_guests)/.test(url)));
+        assert.ok(!calls.slice(start).some(url => /rpc\/(import_invitations|reset_invitations|admin_reset_preview|delete_invitation|create_seating_table|edit_seating_table|delete_seating_table|assign_seating_guests|admin_set_rsvp)/.test(url)));
         admin = true;
         assert.equal((await request(action, 'valid-jwt')).status, action.action === 'import' || action.action === 'seating_create' ? 201 : 200);
       }
     });
     await t.step('reset without exact confirmation and imports with forged fields are rejected', async () => {
+      assert.equal((await request({action:'admin_respond',id:'00000000-0000-4000-8000-000000000001',status:'accepted',p_actor:'forged-admin'},'valid-jwt')).status,400);
       assert.equal((await request({ action: 'reset', confirmation: 'yes', version: token }, 'valid-jwt')).status, 400);
       assert.equal((await request({ action: 'import', batch_id: '00000000-0000-4000-8000-000000000010', guests: [{ full_name: 'Ana López', phone: '', expires_at: '2027-01-01T23:59:59-06:00', token }] }, 'valid-jwt')).status, 400);
       assert.equal((await request({ action: 'reset', confirmation: 'BORRAR TODO', version: token, extra: 'x'.repeat(131072) }, 'valid-jwt')).status, 413);
